@@ -1,8 +1,11 @@
 (() => {
   const STORAGE_TOKEN_KEY = "soul_whispers_token_v1";
   const STORAGE_THEME_KEY = "gratitude_board_theme_v1";
+  const DEFAULT_THEMES = ["感恩恩典", "平安喜乐", "信心盼望"];
 
   let authToken = localStorage.getItem(STORAGE_TOKEN_KEY) || "";
+  let allVerses = [];
+  let isAddingNewTheme = false;
   let toastTimer = null;
 
   const loginSection = document.getElementById("admin-login-section");
@@ -20,12 +23,17 @@
   const verseForm = document.getElementById("verse-form");
   const verseFormTitle = document.getElementById("verse-form-title");
   const editVerseId = document.getElementById("edit-verse-id");
+  const verseThemeSelect = document.getElementById("verse-theme-select");
+  const btnToggleNewTheme = document.getElementById("btn-toggle-new-theme");
+  const verseNewThemeInput = document.getElementById("verse-new-theme");
   const zhText = document.getElementById("zh-text");
   const zhRef = document.getElementById("zh-ref");
   const enText = document.getElementById("en-text");
   const enRef = document.getElementById("en-ref");
   const btnCancelEdit = document.getElementById("btn-cancel-edit");
 
+  const adminThemeFilter = document.getElementById("admin-theme-filter");
+  const importThemeHint = document.getElementById("import-theme-hint");
   const versesListEl = document.getElementById("admin-verses-list");
   const usersListEl = document.getElementById("admin-users-list");
   const toastEl = document.getElementById("toast");
@@ -38,7 +46,7 @@
     toastEl.textContent = msg;
     toastEl.classList.add("show");
     if (toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toastEl.classList.remove("show"), 2400);
+    toastTimer = setTimeout(() => toastEl.classList.remove("show"), 2600);
   }
 
   function applyTheme(theme) {
@@ -67,10 +75,80 @@
     return data;
   }
 
+  function getActiveTheme() {
+    if (isAddingNewTheme) {
+      const custom = verseNewThemeInput.value.trim();
+      if (custom) return custom;
+    }
+    return verseThemeSelect.value || "感恩恩典";
+  }
+
+  function updateImportThemeHint() {
+    if (!importThemeHint) return;
+    importThemeHint.textContent = `提示：若导入的文件中未指定主题类别，将自动归入当前所选主题「${getActiveTheme()}」。`;
+  }
+
+  function populateThemeControls(verses) {
+    const prevSelected = verseThemeSelect.value;
+    const prevFilter = adminThemeFilter.value || "全部";
+    const themeSet = new Set(DEFAULT_THEMES);
+    verses.forEach((v) => {
+      if (v.theme) themeSet.add(v.theme);
+    });
+    const themes = Array.from(themeSet);
+
+    verseThemeSelect.textContent = "";
+    themes.forEach((th) => {
+      const opt = document.createElement("option");
+      opt.value = th;
+      opt.textContent = th;
+      verseThemeSelect.appendChild(opt);
+    });
+    if (prevSelected && themeSet.has(prevSelected)) {
+      verseThemeSelect.value = prevSelected;
+    }
+
+    adminThemeFilter.textContent = "";
+    const allOpt = document.createElement("option");
+    allOpt.value = "全部";
+    allOpt.textContent = "全部主题";
+    adminThemeFilter.appendChild(allOpt);
+    themes.forEach((th) => {
+      const opt = document.createElement("option");
+      opt.value = th;
+      opt.textContent = th;
+      adminThemeFilter.appendChild(opt);
+    });
+    if (prevFilter === "全部" || themeSet.has(prevFilter)) {
+      adminThemeFilter.value = prevFilter;
+    }
+
+    updateImportThemeHint();
+  }
+
+  btnToggleNewTheme.addEventListener("click", () => {
+    isAddingNewTheme = !isAddingNewTheme;
+    verseNewThemeInput.classList.toggle("hidden", !isAddingNewTheme);
+    btnToggleNewTheme.textContent = isAddingNewTheme ? "使用已有主题" : "+ 新增主题";
+    if (isAddingNewTheme) {
+      verseNewThemeInput.focus();
+    } else {
+      verseNewThemeInput.value = "";
+    }
+    updateImportThemeHint();
+  });
+
+  verseThemeSelect.addEventListener("change", updateImportThemeHint);
+  verseNewThemeInput.addEventListener("input", updateImportThemeHint);
+  adminThemeFilter.addEventListener("change", () => renderVerses(allVerses));
+
   function resetVerseForm() {
     editVerseId.value = "";
-    verseForm.reset();
-    verseFormTitle.textContent = "新增圣经感恩经节";
+    zhText.value = "";
+    zhRef.value = "";
+    enText.value = "";
+    enRef.value = "";
+    verseFormTitle.textContent = "可选主题和增加主题 · 经节管理";
     btnCancelEdit.classList.add("hidden");
   }
 
@@ -87,18 +165,29 @@
     statNotes.textContent = stats.notesCount;
     statVerses.textContent = stats.versesCount;
 
-    renderVerses(versesData.verses || []);
+    allVerses = versesData.verses || [];
+    populateThemeControls(allVerses);
+    renderVerses(allVerses);
     renderUsers(usersData.users || []);
   }
 
   function renderVerses(list) {
+    const filterVal = adminThemeFilter.value || "全部";
+    const visible = filterVal === "全部" ? list : list.filter((v) => (v.theme || "感恩恩典") === filterVal);
+
     versesListEl.textContent = "";
-    list.forEach((v) => {
+    visible.forEach((v) => {
       const item = document.createElement("div");
       item.className = "admin-item";
 
       const body = document.createElement("div");
       body.className = "admin-item-body";
+
+      const badge = document.createElement("span");
+      badge.className = "note-category";
+      badge.dataset.cat = "感恩恩典";
+      badge.style.marginBottom = "8px";
+      badge.textContent = v.theme || "感恩恩典";
 
       const pZh = document.createElement("p");
       pZh.className = "admin-item-zh";
@@ -112,7 +201,7 @@
       ref.className = "admin-item-ref";
       ref.textContent = `${v.zh.ref} · ${v.en.ref}`;
 
-      body.append(pZh, pEn, ref);
+      body.append(badge, pZh, pEn, ref);
 
       const actions = document.createElement("div");
       actions.className = "admin-item-actions";
@@ -123,6 +212,13 @@
       btnEdit.textContent = "编辑";
       btnEdit.addEventListener("click", () => {
         editVerseId.value = v.id;
+        isAddingNewTheme = false;
+        verseNewThemeInput.classList.add("hidden");
+        verseNewThemeInput.value = "";
+        btnToggleNewTheme.textContent = "+ 新增主题";
+        verseThemeSelect.value = v.theme || "感恩恩典";
+        updateImportThemeHint();
+
         zhText.value = v.zh.text;
         zhRef.value = v.zh.ref;
         enText.value = v.en.text;
@@ -177,7 +273,9 @@
 
   verseForm.addEventListener("submit", async (e) => {
     e.preventDefault();
+    const theme = getActiveTheme();
     const payload = {
+      theme,
       zhText: zhText.value.trim(),
       zhRef: zhRef.value.trim(),
       enText: enText.value.trim(),
@@ -196,10 +294,18 @@
           method: "POST",
           body: JSON.stringify(payload)
         });
-        showToast("已新增经节");
+        showToast(`已新增经节到「${theme}」`);
       }
       resetVerseForm();
       await loadDashboard();
+      if (isAddingNewTheme) {
+        isAddingNewTheme = false;
+        verseNewThemeInput.classList.add("hidden");
+        verseNewThemeInput.value = "";
+        btnToggleNewTheme.textContent = "+ 新增主题";
+        verseThemeSelect.value = theme;
+        updateImportThemeHint();
+      }
     } catch (err) {
       showToast(err.message);
     }
@@ -275,10 +381,16 @@
       lines.forEach((line, idx) => {
         const cols = parseCsvLine(line);
         if (cols.length < 4) return;
-        const [zhT, zhR, enT, enR] = cols;
+        const [zhT, zhR, enT, enR, themeCol] = cols;
         if (idx === 0 && (zhT === "zhText" || zhT === "中文经文")) return;
         if (zhT && zhR && enT && enR) {
-          parsed.push({ zhText: zhT, zhRef: zhR, enText: enT, enRef: enR });
+          parsed.push({
+            zhText: zhT,
+            zhRef: zhR,
+            enText: enT,
+            enRef: enR,
+            theme: themeCol ? themeCol.trim() : ""
+          });
         }
       });
       return parsed;
@@ -288,6 +400,7 @@
     const list = Array.isArray(json) ? json : json && Array.isArray(json.verses) ? json.verses : [];
     return list
       .map((item) => ({
+        theme: String(item.theme || item.category || "").trim(),
         zhText: String(item.zhText || (item.zh && item.zh.text) || "").trim(),
         zhRef: String(item.zhRef || (item.zh && item.zh.ref) || "").trim(),
         enText: String(item.enText || (item.en && item.en.text) || "").trim(),
@@ -298,12 +411,15 @@
 
   if (btnDownloadTemplate) {
     btnDownloadTemplate.addEventListener("click", () => {
+      const activeTheme = getActiveTheme();
       const template = [
         {
+          theme: activeTheme,
           zh: { text: "你们要称谢耶和华，因他本为善；他的慈爱永远长存！", ref: "诗篇 107:1" },
           en: { text: "O give thanks unto the LORD, for he is good: for his mercy endureth for ever.", ref: "Psalm 107:1" }
         },
         {
+          theme: "平安喜乐",
           zh: { text: "这是耶和华所定的日子，我们在其中要高兴欢喜！", ref: "诗篇 118:24" },
           en: { text: "This is the day which the LORD hath made; we will rejoice and be glad in it.", ref: "Psalm 118:24" }
         }
@@ -317,7 +433,7 @@
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      showToast("已下载导入模板 verses-template.json");
+      showToast("已下载含主题字段的导入模板 verses-template.json");
     });
   }
 
@@ -335,9 +451,10 @@
           showToast("未在文件中识别到有效经节（需包含中英文经文与出处）");
           return;
         }
+        const defaultTheme = getActiveTheme();
         const result = await apiFetch("/api/admin/verses/bulk", {
           method: "POST",
-          body: JSON.stringify({ verses })
+          body: JSON.stringify({ defaultTheme, verses })
         });
         showToast(`批量导入完成：新增 ${result.inserted} 条，跳过 ${result.skipped} 条`);
         await loadDashboard();

@@ -323,28 +323,77 @@
 
   /* ==================== 每日圣经经节 ==================== */
 
+  const verseThemeFilterEl = document.getElementById("verse-theme-filter");
+  let activeVerseTheme = "全部";
+
+  function getFilteredVerses() {
+    if (!Array.isArray(versesList) || versesList.length === 0) return [];
+    if (activeVerseTheme === "全部") return versesList;
+    const matched = versesList.filter((v) => (v.theme || "感恩恩典") === activeVerseTheme);
+    return matched.length > 0 ? matched : versesList;
+  }
+
+  function populateVerseThemeFilter() {
+    if (!verseThemeFilterEl) return;
+    const prev = activeVerseTheme;
+    const themes = Array.from(new Set(versesList.map((v) => v.theme || "感恩恩典")));
+    verseThemeFilterEl.textContent = "";
+
+    const allOpt = document.createElement("option");
+    allOpt.value = "全部";
+    allOpt.textContent = currentLang === "en" ? "All Themes" : "全部主题";
+    verseThemeFilterEl.appendChild(allOpt);
+
+    themes.forEach((th) => {
+      const opt = document.createElement("option");
+      opt.value = th;
+      opt.textContent = th;
+      verseThemeFilterEl.appendChild(opt);
+    });
+
+    if (prev === "全部" || themes.includes(prev)) {
+      verseThemeFilterEl.value = prev;
+    } else {
+      activeVerseTheme = "全部";
+      verseThemeFilterEl.value = "全部";
+    }
+  }
+
+  if (verseThemeFilterEl) {
+    verseThemeFilterEl.addEventListener("change", () => {
+      activeVerseTheme = verseThemeFilterEl.value || "全部";
+      initDailyVerse();
+    });
+  }
+
   function initDailyVerse() {
-    if (!Array.isArray(versesList) || versesList.length === 0) return;
-    currentVerseIndex = hashString(getTodayKey()) % versesList.length;
+    populateVerseThemeFilter();
+    const list = getFilteredVerses();
+    if (list.length === 0) return;
+    currentVerseIndex = hashString(getTodayKey()) % list.length;
     renderVerse(currentVerseIndex);
   }
 
   function renderVerse(index) {
-    const entry = versesList[index];
+    const list = getFilteredVerses();
+    const entry = list[index] || list[0];
     if (!entry) return;
     const localized = entry[currentLang] || entry.zh;
     verseTextEl.textContent = localized.text;
-    verseRefEl.textContent = `${t().verseRefPrefix} ${localized.ref}`;
+    const themeLabel = entry.theme ? ` · ${entry.theme}` : "";
+    verseRefEl.textContent = `${t().verseRefPrefix} ${localized.ref}${themeLabel}`;
   }
 
   btnNextVerse.addEventListener("click", () => {
-    if (!Array.isArray(versesList) || versesList.length <= 1) return;
-    currentVerseIndex = (currentVerseIndex + 1) % versesList.length;
+    const list = getFilteredVerses();
+    if (list.length <= 1) return;
+    currentVerseIndex = (currentVerseIndex + 1) % list.length;
     renderVerse(currentVerseIndex);
   });
 
   btnCollectVerse.addEventListener("click", () => {
-    const entry = versesList[currentVerseIndex];
+    const list = getFilteredVerses();
+    const entry = list[currentVerseIndex] || list[0];
     if (!entry) return;
     const localized = entry[currentLang] || entry.zh;
     const formatted =
@@ -699,6 +748,7 @@
     setButtonLabel(verseTagEl, dict.verseTag);
     setButtonLabel(btnNextVerse, dict.nextVerse);
     setButtonLabel(btnCollectVerse, dict.collectVerse);
+    populateVerseThemeFilter();
     renderVerse(currentVerseIndex);
 
     composerLabelEl.textContent = dict.composerLabel;

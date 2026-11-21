@@ -153,9 +153,17 @@
       </section>
 
       <section class="admin-section">
-        <h2 id="verse-form-title" class="admin-section-title">新增圣经感恩经节</h2>
+        <h2 id="verse-form-title" class="admin-section-title">可选主题和增加主题 · 经节管理</h2>
         <form id="verse-form" class="auth-form">
           <input type="hidden" id="edit-verse-id" />
+          <div class="form-field">
+            <label for="verse-theme-select">经文主题（单条新增或批量导入默认归入此主题）</label>
+            <div class="board-meta-actions">
+              <select id="verse-theme-select" class="form-input" style="max-width: 240px;"></select>
+              <button type="button" id="btn-toggle-new-theme" class="btn-ghost">+ 新增主题</button>
+              <input type="text" id="verse-new-theme" class="form-input hidden" style="max-width: 240px;" maxlength="40" placeholder="输入新主题名称，如：智慧指引" />
+            </div>
+          </div>
           <div class="verse-form-grid">
             <div class="form-field">
               <label for="zh-text">中文经文（和合本）</label>
@@ -182,14 +190,18 @@
       </section>
 
       <section class="admin-section">
-        <div class="board-title-row" style="margin-bottom: 18px;">
+        <div class="board-title-row" style="margin-bottom: 12px;">
           <h2 class="admin-section-title" style="margin: 0;">内置经节库列表</h2>
           <div class="board-meta-actions">
+            <select id="admin-theme-filter" class="form-input" style="width: auto; padding: 5px 12px; font-size: 12.5px;">
+              <option value="全部">全部主题</option>
+            </select>
             <button type="button" id="btn-download-template" class="btn-ghost">下载导入模板 (.json)</button>
             <button type="button" id="btn-import-verses" class="btn-primary" style="padding: 7px 16px; font-size: 13px;">从文件批量导入 (.json / .csv)</button>
             <input type="file" id="input-import-verses" accept=".json,.csv,application/json,text/csv" hidden />
           </div>
         </div>
+        <p id="import-theme-hint" class="composer-hint" style="margin: 0 0 14px;"></p>
         <div id="admin-verses-list" class="admin-list"></div>
       </section>
 

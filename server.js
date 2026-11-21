@@ -66,14 +66,16 @@ app.get("/api/health", async (_req, res) => {
 app.get("/api/verses", async (_req, res) => {
   try {
     const { rows } = await pool.query(
-      "SELECT id, zh_text, zh_ref, en_text, en_ref FROM verses ORDER BY id ASC"
+      "SELECT id, theme, zh_text, zh_ref, en_text, en_ref FROM verses ORDER BY id ASC"
     );
     const formatted = rows.map((r) => ({
       id: r.id,
+      theme: r.theme || "感恩恩典",
       zh: { text: r.zh_text, ref: r.zh_ref },
       en: { text: r.en_text, ref: r.en_ref }
     }));
-    res.json({ verses: formatted });
+    const themes = Array.from(new Set(formatted.map((v) => v.theme)));
+    res.json({ verses: formatted, themes });
   } catch (err) {
     res.status(500).json({ error: "Failed to load verses" });
   }
@@ -296,6 +298,7 @@ app.get("/api/admin/users", requireAuth, requireAdmin, async (_req, res) => {
 });
 
 app.post("/api/admin/verses", requireAuth, requireAdmin, async (req, res) => {
+  const theme = String(req.body.theme || "感恩恩典").trim().slice(0, 40) || "感恩恩典";
   const zhText = String(req.body.zhText || "").trim();
   const zhRef = String(req.body.zhRef || "").trim();
   const enText = String(req.body.enText || "").trim();
@@ -307,12 +310,12 @@ app.post("/api/admin/verses", requireAuth, requireAdmin, async (req, res) => {
 
   try {
     const { rows } = await pool.query(
-      "INSERT INTO verses (zh_text, zh_ref, en_text, en_ref) VALUES ($1, $2, $3, $4) RETURNING id, zh_text, zh_ref, en_text, en_ref",
-      [zhText, zhRef, enText, enRef]
+      "INSERT INTO verses (theme, zh_text, zh_ref, en_text, en_ref) VALUES ($1, $2, $3, $4, $5) RETURNING id, theme, zh_text, zh_ref, en_text, en_ref",
+      [theme, zhText, zhRef, enText, enRef]
     );
     const r = rows[0];
     return res.status(201).json({
-      verse: { id: r.id, zh: { text: r.zh_text, ref: r.zh_ref }, en: { text: r.en_text, ref: r.en_ref } }
+      verse: { id: r.id, theme: r.theme, zh: { text: r.zh_text, ref: r.zh_ref }, en: { text: r.en_text, ref: r.en_ref } }
     });
   } catch {
     return res.status(500).json({ error: "Failed to add verse" });
@@ -320,6 +323,7 @@ app.post("/api/admin/verses", requireAuth, requireAdmin, async (req, res) => {
 });
 
 app.put("/api/admin/verses/:id", requireAuth, requireAdmin, async (req, res) => {
+  const theme = String(req.body.theme || "感恩恩典").trim().slice(0, 40) || "感恩恩典";
   const zhText = String(req.body.zhText || "").trim();
   const zhRef = String(req.body.zhRef || "").trim();
   const enText = String(req.body.enText || "").trim();
@@ -331,15 +335,15 @@ app.put("/api/admin/verses/:id", requireAuth, requireAdmin, async (req, res) => 
 
   try {
     const { rows } = await pool.query(
-      "UPDATE verses SET zh_text = $1, zh_ref = $2, en_text = $3, en_ref = $4 WHERE id = $5 RETURNING id, zh_text, zh_ref, en_text, en_ref",
-      [zhText, zhRef, enText, enRef, req.params.id]
+      "UPDATE verses SET theme = $1, zh_text = $2, zh_ref = $3, en_text = $4, en_ref = $5 WHERE id = $6 RETURNING id, theme, zh_text, zh_ref, en_text, en_ref",
+      [theme, zhText, zhRef, enText, enRef, req.params.id]
     );
     if (rows.length === 0) {
       return res.status(404).json({ error: "Verse not found" });
     }
     const r = rows[0];
     return res.json({
-      verse: { id: r.id, zh: { text: r.zh_text, ref: r.zh_ref }, en: { text: r.en_text, ref: r.en_ref } }
+      verse: { id: r.id, theme: r.theme, zh: { text: r.zh_text, ref: r.zh_ref }, en: { text: r.en_text, ref: r.en_ref } }
     });
   } catch {
     return res.status(500).json({ error: "Failed to update verse" });
@@ -356,6 +360,7 @@ app.delete("/api/admin/verses/:id", requireAuth, requireAdmin, async (req, res) 
 });
 
 app.post("/api/admin/verses/bulk", requireAuth, requireAdmin, async (req, res) => {
+  const defaultTheme = String(req.body.defaultTheme || "感恩恩典").trim().slice(0, 40) || "感恩恩典";
   const rawList = Array.isArray(req.body.verses) ? req.body.verses : null;
   if (!rawList || rawList.length === 0) {
     return res.status(400).json({ error: "No verses provided" });
@@ -374,6 +379,7 @@ app.post("/api/admin/verses/bulk", requireAuth, requireAdmin, async (req, res) =
     let skipped = 0;
 
     for (const item of rawList) {
+      const theme = String(item.theme || item.category || defaultTheme).trim().slice(0, 40) || defaultTheme;
       const zhText = String(item.zhText || (item.zh && item.zh.text) || "").trim();
       const zhRef = String(item.zhRef || (item.zh && item.zh.ref) || "").trim();
       const enText = String(item.enText || (item.en && item.en.text) || "").trim();
@@ -392,8 +398,8 @@ app.post("/api/admin/verses/bulk", requireAuth, requireAdmin, async (req, res) =
       existingKeys.add(dedupKey);
 
       await client.query(
-        "INSERT INTO verses (zh_text, zh_ref, en_text, en_ref) VALUES ($1, $2, $3, $4)",
-        [zhText, zhRef, enText, enRef]
+        "INSERT INTO verses (theme, zh_text, zh_ref, en_text, en_ref) VALUES ($1, $2, $3, $4, $5)",
+        [theme, zhText, zhRef, enText, enRef]
       );
       inserted += 1;
     }

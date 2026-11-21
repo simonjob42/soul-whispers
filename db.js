@@ -41,6 +41,7 @@ async function initDatabase() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS verses (
       id SERIAL PRIMARY KEY,
+      theme TEXT NOT NULL DEFAULT '感恩恩典',
       zh_text TEXT NOT NULL,
       zh_ref TEXT NOT NULL,
       en_text TEXT NOT NULL,
@@ -49,13 +50,18 @@ async function initDatabase() {
     );
   `);
 
+  // 平滑迁移已有数据库表
+  await pool.query(`
+    ALTER TABLE verses ADD COLUMN IF NOT EXISTS theme TEXT NOT NULL DEFAULT '感恩恩典';
+  `);
+
   // 首次启动时自动导入内置 30 条和合本 & KJV 经节
   const { rows: verseCountRows } = await pool.query("SELECT COUNT(*)::int AS cnt FROM verses");
   if (verseCountRows[0].cnt === 0 && Array.isArray(DEFAULT_VERSES)) {
     for (const item of DEFAULT_VERSES) {
       await pool.query(
-        "INSERT INTO verses (zh_text, zh_ref, en_text, en_ref) VALUES ($1, $2, $3, $4)",
-        [item.zh.text, item.zh.ref, item.en.text, item.en.ref]
+        "INSERT INTO verses (theme, zh_text, zh_ref, en_text, en_ref) VALUES ($1, $2, $3, $4, $5)",
+        [item.theme || "感恩恩典", item.zh.text, item.zh.ref, item.en.text, item.en.ref]
       );
     }
     console.log(`Seeded ${DEFAULT_VERSES.length} default verses into PostgreSQL.`);

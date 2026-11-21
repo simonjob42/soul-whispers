@@ -1,4 +1,4 @@
-const CACHE_NAME = "soul-whispers-v3";
+const CACHE_NAME = "soul-whispers-v4";
 const APP_ASSETS = [
   "./",
   "./index.html",
