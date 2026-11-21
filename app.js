@@ -50,6 +50,9 @@
       sampleDate: "示例便签",
       savePngBtn: "保存为卡片图片",
       deleteBtn: "删除",
+      exportBackup: "导出备份",
+      importBackup: "导入备份",
+      backupFilePrefix: "心语备份",
       countAll: (n) => `${n} 张便签`,
       countFiltered: (v, t) => `${v} / ${t} 张便签`,
       emptyTitle: "便签墙暂时空着",
@@ -71,7 +74,12 @@
         darkOn: "已开启夜间护眼模式",
         darkOff: "已切换回日间羊皮纸模式",
         langSwitched: "已切换为中文界面",
-        copiedUrl: "网址已复制，可在手机浏览器打开"
+        copiedUrl: "网址已复制，可在手机浏览器打开",
+        exportEmpty: "当前没有可导出的便签",
+        exportedBackup: (n) => `已导出 ${n} 条便签备份`,
+        importedBackup: (n) => `成功导入 ${n} 条新便签`,
+        importedNone: "备份中的便签均已存在，无需重复导入",
+        importInvalid: "备份文件格式无效，请选择正确的 JSON 备份"
       }
     },
     en: {
@@ -119,6 +127,9 @@
       sampleDate: "Sample",
       savePngBtn: "Save PNG",
       deleteBtn: "Delete",
+      exportBackup: "Export Backup",
+      importBackup: "Import Backup",
+      backupFilePrefix: "soul-whispers-backup",
       countAll: (n) => `${n} ${n === 1 ? "note" : "notes"}`,
       countFiltered: (v, t) => `${v} / ${t} notes`,
       emptyTitle: "Your board is empty",
@@ -140,7 +151,12 @@
         darkOn: "Eye-care Dark Mode enabled",
         darkOff: "Switched back to Parchment Light Mode",
         langSwitched: "Switched to English",
-        copiedUrl: "Link copied! Open it in your mobile browser"
+        copiedUrl: "Link copied! Open it in your mobile browser",
+        exportEmpty: "No notes to export yet",
+        exportedBackup: (n) => `Exported ${n} ${n === 1 ? "note" : "notes"}`,
+        importedBackup: (n) => `Imported ${n} new ${n === 1 ? "note" : "notes"}`,
+        importedNone: "All notes in this backup are already on your board",
+        importInvalid: "Invalid backup file; please select a valid JSON backup"
       }
     }
   };
@@ -667,6 +683,10 @@
     });
 
     boardTitleEl.textContent = dict.boardTitle;
+    const exportBackupLabel = document.getElementById("export-backup-label");
+    if (exportBackupLabel) exportBackupLabel.textContent = dict.exportBackup;
+    const importBackupLabel = document.getElementById("import-backup-label");
+    if (importBackupLabel) importBackupLabel.textContent = dict.importBackup;
     filterTabs.forEach((tab) => {
       const f = tab.dataset.filter;
       tab.textContent = f === "全部" ? dict.filterAll : getCategoryLabel(f);
@@ -729,6 +749,101 @@
       btnAddNote.click();
     }
   });
+
+  /* ==================== 导出 / 导入 JSON 备份 ==================== */
+
+  const btnExportBackup = document.getElementById("btn-export-backup");
+  const btnImportBackup = document.getElementById("btn-import-backup");
+  const inputImportFile = document.getElementById("input-import-file");
+  const VALID_CATEGORIES = new Set(["感恩恩典", "读书金句", "生活小确幸"]);
+
+  function exportBackup() {
+    if (notes.length === 0) {
+      showToast(t().toasts.exportEmpty);
+      return;
+    }
+
+    const payload = {
+      app: "Soul-Whispers",
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      notes: notes.map((item) => ({
+        id: item.id,
+        category: item.category,
+        content: getNoteDisplayContent(item),
+        date: item.date
+      }))
+    };
+
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${t().backupFilePrefix}-${getTodayKey()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+
+    showToast(t().toasts.exportedBackup(notes.length));
+  }
+
+  async function importBackupFromFile(file) {
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      const rawList = Array.isArray(parsed) ? parsed : parsed && Array.isArray(parsed.notes) ? parsed.notes : null;
+      if (!rawList) {
+        showToast(t().toasts.importInvalid);
+        return;
+      }
+
+      const existingIds = new Set(notes.map((n) => n.id));
+      const newItems = [];
+
+      rawList.forEach((item) => {
+        if (!item || typeof item.content !== "string") return;
+        const content = item.content.trim();
+        if (!content) return;
+        const id = typeof item.id === "string" && item.id ? item.id : `note-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+        if (existingIds.has(id)) return;
+        existingIds.add(id);
+
+        const category = VALID_CATEGORIES.has(item.category) ? item.category : "感恩恩典";
+        const date = typeof item.date === "string" && item.date ? item.date : formatShortDate();
+        newItems.push({ id, category, content, date });
+      });
+
+      if (newItems.length === 0) {
+        showToast(t().toasts.importedNone);
+        return;
+      }
+
+      notes = [...newItems, ...notes];
+      saveNotes();
+      localStorage.setItem(STORAGE_INIT_KEY, "1");
+      renderNotes();
+      showToast(t().toasts.importedBackup(newItems.length));
+    } catch {
+      showToast(t().toasts.importInvalid);
+    }
+  }
+
+  if (btnExportBackup) {
+    btnExportBackup.addEventListener("click", exportBackup);
+  }
+
+  if (btnImportBackup && inputImportFile) {
+    btnImportBackup.addEventListener("click", () => {
+      inputImportFile.click();
+    });
+    inputImportFile.addEventListener("change", (event) => {
+      const file = event.target.files && event.target.files[0];
+      importBackupFromFile(file);
+      inputImportFile.value = "";
+    });
+  }
 
   /* ==================== PWA 安装与离线支持 ==================== */
 

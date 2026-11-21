@@ -469,8 +469,22 @@ body {
 
 .board-title-row {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.board-meta-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.btn-backup {
+  padding: 4px 11px;
+  font-size: 12px;
 }
 
 .board-title {

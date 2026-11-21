@@ -163,7 +163,26 @@
       <div class="board-header">
         <div class="board-title-row">
           <h2 class="board-title">灵感便签墙</h2>
-          <span id="notes-count" class="notes-count">0 张便签</span>
+          <div class="board-meta-actions">
+            <span id="notes-count" class="notes-count">0 张便签</span>
+            <button type="button" id="btn-export-backup" class="btn-ghost btn-backup" title="导出全部便签为 JSON 备份">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span id="export-backup-label">导出备份</span>
+            </button>
+            <button type="button" id="btn-import-backup" class="btn-ghost btn-backup" title="从 JSON 备份文件恢复便签">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              <span id="import-backup-label">导入备份</span>
+            </button>
+            <input type="file" id="input-import-file" accept=".json,application/json" hidden />
+          </div>
         </div>
         <div class="filter-bar" role="tablist" aria-label="按分类筛选便签">
           <button type="button" class="filter-tab active" data-filter="全部" role="tab" aria-selected="true">全部</button>
