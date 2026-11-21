@@ -27,6 +27,7 @@
       ],
       copyUrlBtn: "复制当前网址",
       modalOkBtn: "我知道了",
+      qrCaption: "用手机相机扫码打开并安装",
       langToggle: "EN",
       themeDark: "夜间模式",
       themeLight: "日间模式",
@@ -95,6 +96,7 @@
       ],
       copyUrlBtn: "Copy Link",
       modalOkBtn: "Got it",
+      qrCaption: "Scan with your phone camera to open & install",
       langToggle: "中文",
       themeDark: "Dark Mode",
       themeLight: "Light Mode",
@@ -739,15 +741,72 @@
   const installModal = document.getElementById("install-modal");
   const modalTitle = document.getElementById("modal-title");
   const modalBody = document.getElementById("modal-body");
+  const modalQrWrap = document.getElementById("modal-qr-wrap");
+  const modalQrCode = document.getElementById("modal-qr-code");
+  const modalQrCaption = document.getElementById("modal-qr-caption");
   const btnCloseModal = document.getElementById("btn-close-modal");
   const btnModalOk = document.getElementById("btn-modal-ok");
   const btnCopyUrl = document.getElementById("btn-copy-url");
+
+  function getInstallShareUrl() {
+    if (location.protocol === "http:" || location.protocol === "https:") {
+      return window.location.href;
+    }
+    return "https://simonjob42.github.io/soul-whispers/";
+  }
+
+  function renderInstallQrCode() {
+    if (!modalQrWrap || !modalQrCode || typeof window.qrcode !== "function") {
+      if (modalQrWrap) modalQrWrap.classList.add("hidden");
+      return;
+    }
+
+    try {
+      const qr = window.qrcode(0, "M");
+      qr.addData(getInstallShareUrl());
+      qr.make();
+
+      const count = qr.getModuleCount();
+      const size = 296;
+      const cell = size / count;
+      const canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
+
+      ctx.fillStyle = "#fffdf9";
+      ctx.fillRect(0, 0, size, size);
+      ctx.fillStyle = "#15263d";
+
+      for (let r = 0; r < count; r += 1) {
+        for (let c = 0; c < count; c += 1) {
+          if (qr.isDark(r, c)) {
+            ctx.fillRect(
+              Math.floor(c * cell),
+              Math.floor(r * cell),
+              Math.ceil(cell),
+              Math.ceil(cell)
+            );
+          }
+        }
+      }
+
+      modalQrCode.textContent = "";
+      modalQrCode.appendChild(canvas);
+      if (modalQrCaption) modalQrCaption.textContent = t().qrCaption;
+      modalQrWrap.classList.remove("hidden");
+    } catch {
+      modalQrWrap.classList.add("hidden");
+    }
+  }
 
   function openInstallModal(platform) {
     const dict = t();
     const isIos = platform === "ios";
     modalTitle.textContent = isIos ? dict.iosModalTitle : dict.androidModalTitle;
     const steps = isIos ? dict.iosModalSteps : dict.androidModalSteps;
+
+    renderInstallQrCode();
 
     modalBody.textContent = "";
     const ol = document.createElement("ol");
