@@ -64,6 +64,20 @@
       <p class="site-subtitle">
         <span id="today-date"></span> · 在日常微光中记录恩典、思索与小确幸
       </p>
+      <div class="mobile-install-bar" aria-label="手机端安装入口">
+        <button type="button" id="btn-ios-install" class="install-platform-btn">
+          <svg class="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M16.365 1.43c0 1.14-.493 2.27-1.177 3.08-.744.9-1.99 1.57-2.987 1.57-.12 0-.23-.02-.3-.03-.01-.06-.04-.22-.04-.39 0-1.15.572-2.27 1.206-2.98.804-.94 2.142-1.64 3.248-1.68.03.13.05.28.05.43zm4.565 15.71c-.03.07-.463 1.58-1.518 3.12-.945 1.34-1.94 2.71-3.43 2.71-1.517 0-1.9-.88-3.63-.88-1.698 0-2.302.91-3.67.91-1.377 0-2.332-1.26-3.428-2.8-1.287-1.82-2.323-4.63-2.323-7.28 0-4.28 2.797-6.55 5.552-6.55 1.448 0 2.675.95 3.6.95.865 0 2.222-1.01 3.902-1.01.613 0 2.886.06 4.374 2.19-.13.09-2.383 1.37-2.383 4.19 0 3.26 2.854 4.42 2.955 4.45z"/>
+          </svg>
+          <span id="ios-install-label">iPhone 下载</span>
+        </button>
+        <button type="button" id="btn-android-install" class="install-platform-btn">
+          <svg class="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M17.6 9.48l1.84-3.18c.16-.31.04-.69-.26-.85-.29-.15-.65-.06-.83.22l-1.88 3.24a11.43 11.43 0 0 0-8.94 0L5.65 5.67c-.19-.28-.54-.37-.83-.22-.3.16-.42.54-.26.85l1.84 3.18C4.08 10.77 2.5 13.15 2.5 16h19c0-2.85-1.58-5.23-3.9-6.52zM7 13.75a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5zm10 0a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5z"/>
+          </svg>
+          <span id="android-install-label">Android 下载</span>
+        </button>
+      </div>
     </header>
 
     <!-- 每日和合本圣经感恩经节区 -->
@@ -169,6 +183,21 @@
     <footer class="site-footer">
       <p>所有便签仅保存在当前浏览器本地 · 愿你今日平安喜乐</p>
     </footer>
+  </div>
+
+  <!-- 手机安装指引弹窗 -->
+  <div id="install-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-title" class="modal-title">安装到手机桌面</h3>
+        <button type="button" id="btn-close-modal" class="modal-close-btn" aria-label="关闭">×</button>
+      </div>
+      <div id="modal-body" class="modal-body"></div>
+      <div class="modal-footer">
+        <button type="button" id="btn-copy-url" class="btn-ghost">复制当前网址</button>
+        <button type="button" id="btn-modal-ok" class="btn-primary">我知道了</button>
+      </div>
+    </div>
   </div>
 
   <!-- 轻量提示条 -->

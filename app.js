@@ -11,6 +11,22 @@
       siteTitle: "心语",
       subtitleSuffix: "在日常微光中记录恩典、思索与小确幸",
       installApp: "安装 App",
+      iosInstall: "iPhone 下载",
+      androidInstall: "Android 下载",
+      iosModalTitle: "在 iPhone / iPad 上安装「心语」",
+      iosModalSteps: [
+        "用 iPhone 自带的 Safari 浏览器打开当前网页。",
+        "点击浏览器底部（或右上角）的「分享」按钮（方框带向上箭头）。",
+        "向下滑动选择「添加到主屏幕」，确认名称为「心语」后点击「添加」。"
+      ],
+      androidModalTitle: "在 Android 手机上安装「心语」",
+      androidModalSteps: [
+        "用 Android 手机上的 Chrome 或 Edge 浏览器打开当前网页。",
+        "点击浏览器右上角菜单（⋮），选择「安装应用」或「添加到主屏幕」。",
+        "确认安装后，桌面即会出现「心语」图标，支持离线打开。"
+      ],
+      copyUrlBtn: "复制当前网址",
+      modalOkBtn: "我知道了",
       langToggle: "EN",
       themeDark: "夜间模式",
       themeLight: "日间模式",
@@ -53,7 +69,8 @@
         imgError: "图片生成失败，请稍后重试",
         darkOn: "已开启夜间护眼模式",
         darkOff: "已切换回日间羊皮纸模式",
-        langSwitched: "已切换为中文界面"
+        langSwitched: "已切换为中文界面",
+        copiedUrl: "网址已复制，可在手机浏览器打开"
       }
     },
     en: {
@@ -62,6 +79,22 @@
       siteTitle: "Soul-Whispers",
       subtitleSuffix: "Capture grace, reflections, and quiet joys in everyday light",
       installApp: "Install App",
+      iosInstall: "iPhone App",
+      androidInstall: "Android App",
+      iosModalTitle: "Install Soul-Whispers on iPhone / iPad",
+      iosModalSteps: [
+        "Open this page in Safari on your iPhone or iPad.",
+        "Tap the Share button (square with an upward arrow) at the bottom or top.",
+        "Scroll down and tap \"Add to Home Screen\", then tap \"Add\"."
+      ],
+      androidModalTitle: "Install Soul-Whispers on Android",
+      androidModalSteps: [
+        "Open this page in Chrome or Edge on your Android phone.",
+        "Tap the top-right menu (⋮) and choose \"Install app\" or \"Add to Home screen\".",
+        "Confirm to place Soul-Whispers on your home screen for offline use."
+      ],
+      copyUrlBtn: "Copy Link",
+      modalOkBtn: "Got it",
       langToggle: "中文",
       themeDark: "Dark Mode",
       themeLight: "Light Mode",
@@ -104,7 +137,8 @@
         imgError: "Failed to generate image; please try again",
         darkOn: "Eye-care Dark Mode enabled",
         darkOff: "Switched back to Parchment Light Mode",
-        langSwitched: "Switched to English"
+        langSwitched: "Switched to English",
+        copiedUrl: "Link copied! Open it in your mobile browser"
       }
     }
   };
@@ -583,6 +617,14 @@
     langToggleLabel.textContent = dict.langToggle;
     const installLabel = document.getElementById("install-app-label");
     if (installLabel) installLabel.textContent = dict.installApp;
+    const iosLabel = document.getElementById("ios-install-label");
+    if (iosLabel) iosLabel.textContent = dict.iosInstall;
+    const androidLabel = document.getElementById("android-install-label");
+    if (androidLabel) androidLabel.textContent = dict.androidInstall;
+    const copyUrlBtn = document.getElementById("btn-copy-url");
+    if (copyUrlBtn) copyUrlBtn.textContent = dict.copyUrlBtn;
+    const modalOkBtn = document.getElementById("btn-modal-ok");
+    if (modalOkBtn) modalOkBtn.textContent = dict.modalOkBtn;
     updateThemeButtonLabel();
 
     siteTitleEl.textContent = dict.siteTitle;
@@ -690,6 +732,82 @@
 
   let deferredInstallPrompt = null;
   const btnInstallApp = document.getElementById("btn-install-app");
+  const btnIosInstall = document.getElementById("btn-ios-install");
+  const btnAndroidInstall = document.getElementById("btn-android-install");
+  const mobileInstallBar = document.querySelector(".mobile-install-bar");
+
+  const installModal = document.getElementById("install-modal");
+  const modalTitle = document.getElementById("modal-title");
+  const modalBody = document.getElementById("modal-body");
+  const btnCloseModal = document.getElementById("btn-close-modal");
+  const btnModalOk = document.getElementById("btn-modal-ok");
+  const btnCopyUrl = document.getElementById("btn-copy-url");
+
+  function openInstallModal(platform) {
+    const dict = t();
+    const isIos = platform === "ios";
+    modalTitle.textContent = isIos ? dict.iosModalTitle : dict.androidModalTitle;
+    const steps = isIos ? dict.iosModalSteps : dict.androidModalSteps;
+
+    modalBody.textContent = "";
+    const ol = document.createElement("ol");
+    ol.className = "modal-steps";
+    steps.forEach((stepText) => {
+      const li = document.createElement("li");
+      li.textContent = stepText;
+      ol.appendChild(li);
+    });
+    modalBody.appendChild(ol);
+    installModal.classList.remove("hidden");
+  }
+
+  function closeInstallModal() {
+    installModal.classList.add("hidden");
+  }
+
+  if (btnIosInstall) {
+    btnIosInstall.addEventListener("click", () => openInstallModal("ios"));
+  }
+
+  if (btnAndroidInstall) {
+    btnAndroidInstall.addEventListener("click", async () => {
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        const result = await deferredInstallPrompt.userChoice;
+        if (result && result.outcome === "accepted" && btnInstallApp) {
+          btnInstallApp.classList.add("hidden");
+        }
+        deferredInstallPrompt = null;
+      } else {
+        openInstallModal("android");
+      }
+    });
+  }
+
+  if (btnCloseModal) btnCloseModal.addEventListener("click", closeInstallModal);
+  if (btnModalOk) btnModalOk.addEventListener("click", closeInstallModal);
+  if (installModal) {
+    installModal.addEventListener("click", (event) => {
+      if (event.target === installModal) closeInstallModal();
+    });
+  }
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && installModal && !installModal.classList.contains("hidden")) {
+      closeInstallModal();
+    }
+  });
+
+  if (btnCopyUrl) {
+    btnCopyUrl.addEventListener("click", async () => {
+      const url = window.location.href;
+      try {
+        await navigator.clipboard.writeText(url);
+        showToast(t().toasts.copiedUrl);
+      } catch {
+        showToast(url);
+      }
+    });
+  }
 
   window.addEventListener("beforeinstallprompt", (event) => {
     event.preventDefault();
@@ -711,8 +829,18 @@
 
   window.addEventListener("appinstalled", () => {
     if (btnInstallApp) btnInstallApp.classList.add("hidden");
+    if (mobileInstallBar) mobileInstallBar.classList.add("hidden");
     deferredInstallPrompt = null;
   });
+
+  function checkStandaloneMode() {
+    const isStandalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.navigator.standalone === true;
+    if (isStandalone && mobileInstallBar) {
+      mobileInstallBar.classList.add("hidden");
+    }
+  }
 
   function registerServiceWorker() {
     const isHttp = location.protocol === "http:" || location.protocol === "https:";
@@ -727,6 +855,7 @@
     initDailyVerse();
     loadNotes();
     applyLanguage(currentLang);
+    checkStandaloneMode();
     registerServiceWorker();
   }
 

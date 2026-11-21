@@ -979,3 +979,149 @@ body {
   background: rgba(243, 239, 230, 0.96);
   border-color: var(--gold-500);
 }
+
+/* ==================== 手机端 iPhone / Android 安装按钮 ==================== */
+.mobile-install-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.mobile-install-bar.hidden {
+  display: none;
+}
+
+.install-platform-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy-800);
+  background: rgba(255, 253, 249, 0.9);
+  border: 1px solid rgba(30, 58, 95, 0.16);
+  border-radius: 999px;
+  box-shadow: 0 4px 12px rgba(21, 38, 61, 0.06);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.install-platform-btn:hover {
+  color: #fffdf9;
+  background: var(--navy-800);
+  border-color: var(--navy-800);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(21, 38, 61, 0.16);
+}
+
+.install-platform-btn:active {
+  transform: scale(0.97);
+}
+
+/* ==================== 安装指引弹窗 ==================== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 24, 38, 0.55);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+}
+
+.modal-backdrop.hidden {
+  display: none;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--surface-card);
+  border: 1px solid var(--gold-200);
+  border-radius: var(--radius-lg);
+  padding: 24px 26px;
+  box-shadow: 0 24px 48px rgba(15, 24, 38, 0.28);
+  animation: cardEnter 0.25s ease both;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--navy-800);
+}
+
+.modal-close-btn {
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--navy-500);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.modal-close-btn:hover {
+  background: rgba(30, 58, 95, 0.08);
+  color: var(--navy-900);
+}
+
+.modal-body {
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--navy-700);
+  margin-bottom: 20px;
+}
+
+.modal-steps {
+  margin: 10px 0 0;
+  padding-left: 20px;
+}
+
+.modal-steps li {
+  margin-bottom: 6px;
+}
+
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+[data-theme="dark"] .install-platform-btn {
+  color: var(--navy-800);
+  background: rgba(29, 38, 54, 0.92);
+  border-color: rgba(216, 177, 84, 0.3);
+}
+
+[data-theme="dark"] .install-platform-btn:hover {
+  color: #141a24;
+  background: var(--gold-500);
+  border-color: var(--gold-500);
+}
+
+[data-theme="dark"] .modal-card {
+  border-color: rgba(216, 177, 84, 0.32);
+}
+
+[data-theme="dark"] .modal-close-btn:hover {
+  background: rgba(206, 216, 230, 0.12);
+}

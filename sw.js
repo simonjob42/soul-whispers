@@ -1,4 +1,4 @@
-const CACHE_NAME = "soul-whispers-v1";
+const CACHE_NAME = "soul-whispers-v2";
 const APP_ASSETS = [
   "./",
   "./index.html",
@@ -28,18 +28,18 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
+// 网络优先策略：在线时获取最新版本并更新缓存，离线时自动回退到本地缓存
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request).then((response) => {
+    fetch(event.request)
+      .then((response) => {
         if (response && response.status === 200 && response.type === "basic") {
           const copy = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
         }
         return response;
-      });
-    })
+      })
+      .catch(() => caches.match(event.request))
   );
 });
