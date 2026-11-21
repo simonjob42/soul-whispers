@@ -54,10 +54,13 @@
       hintPrefix: "提示：按",
       hintSuffix: "快速贴上便签",
       addNoteBtn: "贴上便签",
+      quickAddBtn: "添加便签",
       boardTitle: "灵感便签墙",
       filterAll: "全部",
       categories: {
         "感恩恩典": "感恩恩典",
+        "平安喜乐": "平安喜乐",
+        "信心盼望": "信心盼望",
         "读书金句": "读书金句",
         "生活小确幸": "生活小确幸"
       },
@@ -148,10 +151,13 @@
       hintPrefix: "Tip: Press",
       hintSuffix: "to post quickly",
       addNoteBtn: "Post Note",
+      quickAddBtn: "Add Note",
       boardTitle: "Inspiration Wall",
       filterAll: "All",
       categories: {
         "感恩恩典": "Grace & Gratitude",
+        "平安喜乐": "Peace & Joy",
+        "信心盼望": "Faith & Hope",
         "读书金句": "Book Quotes",
         "生活小确幸": "Little Joys"
       },
@@ -213,8 +219,8 @@
 
   const DEFAULT_NOTES = [
     { id: "sample-1", category: "感恩恩典", content: SAMPLE_TRANSLATIONS["sample-1"].zh, date: "示例便签" },
-    { id: "sample-2", category: "读书金句", content: SAMPLE_TRANSLATIONS["sample-2"].zh, date: "示例便签" },
-    { id: "sample-3", category: "生活小确幸", content: SAMPLE_TRANSLATIONS["sample-3"].zh, date: "示例便签" }
+    { id: "sample-2", category: "信心盼望", content: SAMPLE_TRANSLATIONS["sample-2"].zh, date: "示例便签" },
+    { id: "sample-3", category: "平安喜乐", content: SAMPLE_TRANSLATIONS["sample-3"].zh, date: "示例便签" }
   ];
 
   // DOM 元素
@@ -400,9 +406,87 @@
       currentLang === "en"
         ? `${localized.text}\n— ${localized.ref} (${t().verseRefPrefix})`
         : `${localized.text}\n——${t().verseRefPrefix}${localized.ref}`;
-    addNote("感恩恩典", formatted);
+    addNote(entry.theme || "感恩恩典", formatted);
     showToast(t().toasts.collected);
   });
+
+  const categoryPillsContainer = document.querySelector(".category-pills");
+  const filterBarContainer = document.querySelector(".filter-bar");
+
+  function getUnifiedThemes() {
+    const themeSet = new Set();
+    versesList.forEach((v) => {
+      if (v.theme) themeSet.add(v.theme);
+    });
+    notes.forEach((n) => {
+      if (n.category) themeSet.add(n.category);
+    });
+    if (themeSet.size === 0) {
+      themeSet.add("感恩恩典");
+      themeSet.add("平安喜乐");
+      themeSet.add("信心盼望");
+    }
+    return Array.from(themeSet);
+  }
+
+  function getDotClassForTheme(theme) {
+    if (theme === "平安喜乐" || theme === "生活小确幸") return "dot-joy";
+    if (theme === "信心盼望" || theme === "读书金句") return "dot-quote";
+    return "dot-grace";
+  }
+
+  function renderCategoryAndFilterBars() {
+    const themes = getUnifiedThemes();
+    if (!themes.includes(selectedCategory)) {
+      selectedCategory = themes[0];
+    }
+    if (activeFilter !== "全部" && !themes.includes(activeFilter)) {
+      activeFilter = "全部";
+    }
+
+    if (categoryPillsContainer) {
+      categoryPillsContainer.textContent = "";
+      themes.forEach((th) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        const isActive = th === selectedCategory;
+        btn.className = isActive ? "pill active" : "pill";
+        btn.dataset.category = th;
+        btn.setAttribute("role", "radio");
+        btn.setAttribute("aria-checked", isActive ? "true" : "false");
+
+        const dot = document.createElement("span");
+        dot.className = `dot ${getDotClassForTheme(th)}`;
+        btn.append(dot, document.createTextNode(getCategoryLabel(th)));
+
+        btn.addEventListener("click", () => {
+          selectedCategory = th;
+          renderCategoryAndFilterBars();
+        });
+        categoryPillsContainer.appendChild(btn);
+      });
+    }
+
+    if (filterBarContainer) {
+      filterBarContainer.textContent = "";
+      const allOptions = ["全部", ...themes];
+      allOptions.forEach((opt) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        const isActive = opt === activeFilter;
+        btn.className = isActive ? "filter-tab active" : "filter-tab";
+        btn.dataset.filter = opt;
+        btn.setAttribute("role", "tab");
+        btn.setAttribute("aria-selected", isActive ? "true" : "false");
+        btn.textContent = opt === "全部" ? t().filterAll : getCategoryLabel(opt);
+
+        btn.addEventListener("click", () => {
+          setActiveFilter(opt);
+        });
+        filterBarContainer.appendChild(btn);
+      });
+    }
+  }
 
   /* ==================== localStorage 持久化 ==================== */
 
@@ -566,7 +650,7 @@
 
   function setActiveFilter(filterValue) {
     activeFilter = filterValue;
-    filterTabs.forEach((tab) => {
+    document.querySelectorAll(".filter-bar .filter-tab").forEach((tab) => {
       const isMatch = tab.dataset.filter === filterValue;
       tab.classList.toggle("active", isMatch);
       tab.setAttribute("aria-selected", isMatch ? "true" : "false");
@@ -772,23 +856,15 @@
       ` ${dict.hintSuffix}`
     );
 
-    categoryPills.forEach((pill) => {
-      const dot = pill.querySelector(".dot");
-      const label = getCategoryLabel(pill.dataset.category);
-      pill.textContent = "";
-      if (dot) pill.appendChild(dot);
-      pill.appendChild(document.createTextNode(label));
-    });
+    const quickAddLabel = document.getElementById("quick-add-label");
+    if (quickAddLabel) quickAddLabel.textContent = dict.quickAddBtn;
+    renderCategoryAndFilterBars();
 
     boardTitleEl.textContent = dict.boardTitle;
     const exportBackupLabel = document.getElementById("export-backup-label");
     if (exportBackupLabel) exportBackupLabel.textContent = dict.exportBackup;
     const importBackupLabel = document.getElementById("import-backup-label");
     if (importBackupLabel) importBackupLabel.textContent = dict.importBackup;
-    filterTabs.forEach((tab) => {
-      const f = tab.dataset.filter;
-      tab.textContent = f === "全部" ? dict.filterAll : getCategoryLabel(f);
-    });
 
     footerTextEl.textContent = dict.footer;
     updateAuthUI();
@@ -834,6 +910,21 @@
       setActiveFilter(tab.dataset.filter);
     });
   });
+
+  const btnQuickAddNote = document.getElementById("btn-quick-add-note");
+  if (btnQuickAddNote) {
+    btnQuickAddNote.addEventListener("click", () => {
+      if (activeFilter !== "全部") {
+        selectedCategory = activeFilter;
+        renderCategoryAndFilterBars();
+      }
+      const composer = document.querySelector(".composer-card");
+      if (composer) {
+        composer.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      setTimeout(() => noteInput.focus(), 260);
+    });
+  }
 
   btnAddNote.addEventListener("click", () => {
     if (addNote(selectedCategory, noteInput.value)) {
@@ -1247,6 +1338,7 @@
       if (Array.isArray(data.verses) && data.verses.length > 0) {
         versesList = data.verses;
         initDailyVerse();
+        renderCategoryAndFilterBars();
       }
     } catch {
       // 静态托管或离线时保持使用本地 verses.js

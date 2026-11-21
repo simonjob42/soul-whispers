@@ -609,6 +609,26 @@ body {
   font-weight: 600;
   padding: 4px 11px;
   border-radius: 999px;
+  color: var(--gold-600);
+  background: var(--gold-100);
+  border: 1px solid var(--gold-200);
+}
+
+.btn-quick-add {
+  padding: 5px 13px;
+  font-size: 12.5px;
+}
+
+.note-category[data-cat="平安喜乐"] {
+  color: #9b5239;
+  background: #fdf1ec;
+  border: 1px solid #f4d6ca;
+}
+
+.note-category[data-cat="信心盼望"] {
+  color: var(--navy-800);
+  background: #edf2f8;
+  border: 1px solid #d3dfee;
 }
 
 .note-category[data-cat="感恩恩典"] {
@@ -980,6 +1000,19 @@ body {
   border-color: rgba(216, 177, 84, 0.36);
 }
 
+[data-theme="dark"] .note-category {
+  color: #f2cf7e;
+  background: rgba(216, 177, 84, 0.16);
+  border-color: rgba(216, 177, 84, 0.36);
+}
+
+[data-theme="dark"] .note-category[data-cat="平安喜乐"] {
+  color: #f5b39b;
+  background: rgba(217, 138, 108, 0.18);
+  border-color: rgba(245, 179, 155, 0.34);
+}
+
+[data-theme="dark"] .note-category[data-cat="信心盼望"],
 [data-theme="dark"] .note-category[data-cat="读书金句"] {
   color: #a9cbf5;
   background: rgba(91, 132, 177, 0.2);

@@ -7,7 +7,11 @@ const { pool, initDatabase } = require("./db");
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-in-production";
-const VALID_CATEGORIES = new Set(["感恩恩典", "读书金句", "生活小确幸"]);
+
+function normalizeCategory(raw) {
+  const val = String(raw || "").trim().slice(0, 40);
+  return val || "感恩恩典";
+}
 
 app.use(express.json({ limit: "1mb" }));
 
@@ -196,7 +200,7 @@ app.get("/api/notes", requireAuth, async (req, res) => {
 
 app.post("/api/notes", requireAuth, async (req, res) => {
   const id = String(req.body.id || `note-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`);
-  const category = VALID_CATEGORIES.has(req.body.category) ? req.body.category : "感恩恩典";
+  const category = normalizeCategory(req.body.category);
   const content = String(req.body.content || "").trim().slice(0, 2000);
   const dateLabel = String(req.body.date || "").trim().slice(0, 32) || new Date().toISOString().slice(0, 10).replace(/-/g, ".");
 
@@ -230,7 +234,7 @@ app.post("/api/notes/sync", requireAuth, async (req, res) => {
       // 跳过未修改的默认示例便签，避免重复写入
       if (id.startsWith("sample-")) continue;
 
-      const category = VALID_CATEGORIES.has(item.category) ? item.category : "感恩恩典";
+      const category = normalizeCategory(item.category);
       const dateLabel = typeof item.date === "string" && item.date ? item.date.slice(0, 32) : "2026";
       const result = await pool.query(
         `INSERT INTO notes (id, user_id, category, content, date_label)
