@@ -1,0 +1,25 @@
+databases:
+  - name: soul-whispers-db
+    databaseName: soul_whispers
+    user: soul_whispers_user
+    plan: basic-256mb
+
+services:
+  - type: web
+    name: soul-whispers
+    runtime: node
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: soul-whispers-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_EMAIL
+        value: admin@soul-whispers.app
+      - key: ADMIN_PASSWORD
+        sync: false

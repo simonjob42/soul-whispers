@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>管理后台 · 心语 Soul-Whispers</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .admin-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--surface-card);
+      border: 1px solid var(--gold-200);
+      border-radius: var(--radius-md);
+      padding: 20px 22px;
+      box-shadow: var(--shadow-soft);
+    }
+    .stat-label {
+      font-size: 13px;
+      color: var(--navy-500);
+      margin-bottom: 6px;
+    }
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--navy-800);
+    }
+    .admin-section {
+      background: var(--surface-card);
+      border: 1px solid rgba(30, 58, 95, 0.12);
+      border-radius: var(--radius-lg);
+      padding: 24px 28px;
+      margin-bottom: 28px;
+      box-shadow: var(--shadow-soft);
+    }
+    .admin-section-title {
+      margin: 0 0 18px;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--navy-800);
+    }
+    .verse-form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 680px) {
+      .verse-form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .admin-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .admin-item {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 18px;
+      background: var(--bg-parchment);
+      border: 1px solid rgba(200, 155, 60, 0.24);
+      border-radius: var(--radius-md);
+    }
+    [data-theme="dark"] .admin-item {
+      background: #151c28;
+      border-color: rgba(216, 177, 84, 0.22);
+    }
+    .admin-item-body {
+      flex: 1;
+      min-width: 0;
+    }
+    .admin-item-zh {
+      margin: 0 0 4px;
+      font-size: 14.5px;
+      font-weight: 500;
+      color: var(--navy-900);
+    }
+    .admin-item-en {
+      margin: 0 0 6px;
+      font-size: 13.5px;
+      color: var(--navy-500);
+    }
+    .admin-item-ref {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gold-600);
+    }
+    .admin-item-actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+  </style>
+  <script src="admin.js" defer></script>
+</head>
+<body>
+  <div class="ambient-glow" aria-hidden="true"></div>
+
+  <div class="page-wrapper">
+    <div class="top-utility-bar">
+      <a href="index.html" class="theme-toggle-btn">← 返回心语首页</a>
+      <button type="button" id="btn-admin-theme" class="theme-toggle-btn">夜间模式</button>
+      <button type="button" id="btn-admin-logout" class="theme-toggle-btn hidden">退出登录</button>
+    </div>
+
+    <header class="site-header">
+      <div class="header-badge">SOUL-WHISPERS ADMIN</div>
+      <h1 class="site-title">心语 · 管理后台</h1>
+      <p class="site-subtitle">管理圣经感恩经节库与查看用户统计</p>
+    </header>
+
+    <!-- 管理员登录区 -->
+    <section id="admin-login-section" class="admin-section" style="max-width: 460px; margin: 0 auto;">
+      <h2 class="admin-section-title">管理员登录</h2>
+      <form id="admin-login-form" class="auth-form">
+        <div class="form-field">
+          <label for="admin-email">管理员邮箱</label>
+          <input type="email" id="admin-email" class="form-input" required placeholder="admin@soul-whispers.app" />
+        </div>
+        <div class="form-field">
+          <label for="admin-password">密码</label>
+          <input type="password" id="admin-password" class="form-input" required />
+        </div>
+        <p id="admin-login-error" class="auth-error hidden"></p>
+        <div class="modal-footer">
+          <button type="submit" class="btn-primary">登录后台</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- 后台主内容区 -->
+    <main id="admin-dashboard" class="hidden">
+      <section class="admin-stats">
+        <div class="stat-card">
+          <div class="stat-label">注册用户总数</div>
+          <div id="stat-users" class="stat-value">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">云端便签总数</div>
+          <div id="stat-notes" class="stat-value">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">圣经经节总数</div>
+          <div id="stat-verses" class="stat-value">0</div>
+        </div>
+      </section>
+
+      <section class="admin-section">
+        <h2 id="verse-form-title" class="admin-section-title">新增圣经感恩经节</h2>
+        <form id="verse-form" class="auth-form">
+          <input type="hidden" id="edit-verse-id" />
+          <div class="verse-form-grid">
+            <div class="form-field">
+              <label for="zh-text">中文经文（和合本）</label>
+              <textarea id="zh-text" class="note-textarea" rows="3" required placeholder="输入 1～3 节中文经文"></textarea>
+            </div>
+            <div class="form-field">
+              <label for="en-text">英文经文（KJV）</label>
+              <textarea id="en-text" class="note-textarea" rows="3" required placeholder="Enter English verse text"></textarea>
+            </div>
+            <div class="form-field">
+              <label for="zh-ref">中文出处</label>
+              <input type="text" id="zh-ref" class="form-input" required placeholder="例如：诗篇 107:1" />
+            </div>
+            <div class="form-field">
+              <label for="en-ref">英文出处</label>
+              <input type="text" id="en-ref" class="form-input" required placeholder="e.g. Psalm 107:1" />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="btn-cancel-edit" class="btn-ghost hidden">取消编辑</button>
+            <button type="submit" id="btn-save-verse" class="btn-primary">保存经节</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="admin-section">
+        <h2 class="admin-section-title">内置经节库列表</h2>
+        <div id="admin-verses-list" class="admin-list"></div>
+      </section>
+
+      <section class="admin-section">
+        <h2 class="admin-section-title">注册用户列表</h2>
+        <div id="admin-users-list" class="admin-list"></div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

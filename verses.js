@@ -124,3 +124,7 @@ const GRATITUDE_VERSES = [
     en: { text: "The blessing of the LORD, it maketh rich, and he addeth no sorrow with it.", ref: "Proverbs 10:22" }
   }
 ];
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = GRATITUDE_VERSES;
+}

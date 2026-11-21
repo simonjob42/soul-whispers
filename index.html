@@ -23,6 +23,20 @@
   <div class="page-wrapper">
     <!-- 右上角工具栏 -->
     <div class="top-utility-bar">
+      <a href="admin.html" id="link-admin" class="theme-toggle-btn hidden" title="管理员后台">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"></path>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+        <span id="admin-link-label">管理后台</span>
+      </a>
+      <button type="button" id="btn-auth" class="theme-toggle-btn" title="登录或注册云端账号">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span id="auth-btn-label">登录 / 注册</span>
+      </button>
       <button type="button" id="btn-install-app" class="theme-toggle-btn install-app-btn hidden" title="安装到手机桌面">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M12 3v12"></path>
@@ -220,6 +234,51 @@
       <div class="modal-footer">
         <button type="button" id="btn-copy-url" class="btn-ghost">复制当前网址</button>
         <button type="button" id="btn-modal-ok" class="btn-primary">我知道了</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 账号登录 / 注册弹窗 -->
+  <div id="auth-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="auth-modal-title" class="modal-title">云端账号</h3>
+        <button type="button" id="btn-close-auth-modal" class="modal-close-btn" aria-label="关闭">×</button>
+      </div>
+
+      <!-- 未登录视图 -->
+      <div id="auth-form-view">
+        <div class="auth-tabs" role="tablist">
+          <button type="button" id="tab-login" class="filter-tab active" role="tab" aria-selected="true">登录</button>
+          <button type="button" id="tab-signup" class="filter-tab" role="tab" aria-selected="false">注册新账号</button>
+        </div>
+        <form id="auth-form" class="auth-form">
+          <div class="form-field">
+            <label for="auth-email" id="lbl-auth-email">邮箱或用户名</label>
+            <input type="text" id="auth-email" class="form-input" required autocomplete="username" placeholder="name@example.com" />
+          </div>
+          <div id="auth-name-wrap" class="form-field hidden">
+            <label for="auth-name" id="lbl-auth-name">昵称（选填）</label>
+            <input type="text" id="auth-name" class="form-input" maxlength="40" placeholder="例如：小敏" />
+          </div>
+          <div class="form-field">
+            <label for="auth-password" id="lbl-auth-password">密码（至少 6 位）</label>
+            <input type="password" id="auth-password" class="form-input" required minlength="6" autocomplete="current-password" />
+          </div>
+          <p id="auth-error" class="auth-error hidden"></p>
+          <div class="modal-footer">
+            <button type="submit" id="btn-auth-submit" class="btn-primary">登录</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- 已登录视图 -->
+      <div id="auth-profile-view" class="hidden">
+        <p id="auth-profile-info" class="modal-body"></p>
+        <div class="modal-footer">
+          <button type="button" id="btn-sync-notes" class="btn-ghost">同步本地便签</button>
+          <button type="button" id="btn-logout" class="btn-primary">退出登录</button>
+        </div>
       </div>
     </div>
   </div>

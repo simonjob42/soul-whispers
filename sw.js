@@ -1,4 +1,4 @@
-const CACHE_NAME = "soul-whispers-v2";
+const CACHE_NAME = "soul-whispers-v3";
 const APP_ASSETS = [
   "./",
   "./index.html",
@@ -31,6 +31,8 @@ self.addEventListener("activate", (event) => {
 // 网络优先策略：在线时获取最新版本并更新缓存，离线时自动回退到本地缓存
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+  const url = new URL(event.request.url);
+  if (url.pathname.startsWith("/api/")) return;
   event.respondWith(
     fetch(event.request)
       .then((response) => {

@@ -1,0 +1,18 @@
+{
+  "name": "soul-whispers",
+  "version": "1.0.0",
+  "description": "心语 · Soul-Whispers — 每日感恩与灵感便签墙 (PWA + PostgreSQL + Admin)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.13.1"
+  }
+}

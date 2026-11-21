@@ -3,6 +3,7 @@
   const STORAGE_INIT_KEY = "gratitude_board_initialized_v1";
   const STORAGE_THEME_KEY = "gratitude_board_theme_v1";
   const STORAGE_LANG_KEY = "gratitude_board_lang_v1";
+  const STORAGE_TOKEN_KEY = "soul_whispers_token_v1";
 
   const I18N = {
     zh: {
@@ -28,6 +29,19 @@
       copyUrlBtn: "复制当前网址",
       modalOkBtn: "我知道了",
       qrCaption: "用手机相机扫码打开并安装",
+      authBtnGuest: "登录 / 注册",
+      adminLink: "管理后台",
+      authModalTitle: "云端账号",
+      authTabLogin: "登录",
+      authTabSignup: "注册新账号",
+      authEmailLabel: "邮箱或用户名",
+      authNameLabel: "昵称（选填）",
+      authPasswordLabel: "密码（至少 6 位）",
+      authSubmitLogin: "登录",
+      authSubmitSignup: "注册并开启云同步",
+      authProfileText: (name, email) => `已登录：${name}（${email}）\n您的便签会自动同步到云端，在手机与电脑上登录同一账号即可互通。`,
+      authSyncBtn: "同步本地便签",
+      authLogoutBtn: "退出登录",
       langToggle: "EN",
       themeDark: "夜间模式",
       themeLight: "日间模式",
@@ -79,7 +93,11 @@
         exportedBackup: (n) => `已导出 ${n} 条便签备份`,
         importedBackup: (n) => `成功导入 ${n} 条新便签`,
         importedNone: "备份中的便签均已存在，无需重复导入",
-        importInvalid: "备份文件格式无效，请选择正确的 JSON 备份"
+        importInvalid: "备份文件格式无效，请选择正确的 JSON 备份",
+        loggedIn: "登录成功，已同步云端便签",
+        signedUp: "注册成功，已开启云端同步",
+        loggedOut: "已退出登录，当前为本地模式",
+        syncedNotes: (n) => (n > 0 ? `已将 ${n} 条本地便签同步到云端` : "云端便签已是最新")
       }
     },
     en: {
@@ -105,6 +123,19 @@
       copyUrlBtn: "Copy Link",
       modalOkBtn: "Got it",
       qrCaption: "Scan with your phone camera to open & install",
+      authBtnGuest: "Sign In",
+      adminLink: "Admin",
+      authModalTitle: "Cloud Account",
+      authTabLogin: "Log In",
+      authTabSignup: "Sign Up",
+      authEmailLabel: "Email or Username",
+      authNameLabel: "Display Name (optional)",
+      authPasswordLabel: "Password (min 6 chars)",
+      authSubmitLogin: "Log In",
+      authSubmitSignup: "Create Account",
+      authProfileText: (name, email) => `Signed in as ${name} (${email}). Your notes sync automatically across your phone and desktop.`,
+      authSyncBtn: "Sync Local Notes",
+      authLogoutBtn: "Log Out",
       langToggle: "中文",
       themeDark: "Dark Mode",
       themeLight: "Light Mode",
@@ -156,7 +187,11 @@
         exportedBackup: (n) => `Exported ${n} ${n === 1 ? "note" : "notes"}`,
         importedBackup: (n) => `Imported ${n} new ${n === 1 ? "note" : "notes"}`,
         importedNone: "All notes in this backup are already on your board",
-        importInvalid: "Invalid backup file; please select a valid JSON backup"
+        importInvalid: "Invalid backup file; please select a valid JSON backup",
+        loggedIn: "Signed in and synced with cloud",
+        signedUp: "Account created! Cloud sync enabled",
+        loggedOut: "Signed out (switched to local mode)",
+        syncedNotes: (n) => (n > 0 ? `Synced ${n} local notes to cloud` : "Cloud notes are up to date")
       }
     }
   };
@@ -217,7 +252,10 @@
   let selectedCategory = "感恩恩典";
   let activeFilter = "全部";
   let currentVerseIndex = 0;
+  let versesList = Array.isArray(GRATITUDE_VERSES) ? GRATITUDE_VERSES.slice() : [];
   let notes = [];
+  let currentUser = null;
+  let authToken = localStorage.getItem(STORAGE_TOKEN_KEY) || "";
   let toastTimer = null;
 
   /* ==================== 工具函数 ==================== */
@@ -286,13 +324,13 @@
   /* ==================== 每日圣经经节 ==================== */
 
   function initDailyVerse() {
-    if (!Array.isArray(GRATITUDE_VERSES) || GRATITUDE_VERSES.length === 0) return;
-    currentVerseIndex = hashString(getTodayKey()) % GRATITUDE_VERSES.length;
+    if (!Array.isArray(versesList) || versesList.length === 0) return;
+    currentVerseIndex = hashString(getTodayKey()) % versesList.length;
     renderVerse(currentVerseIndex);
   }
 
   function renderVerse(index) {
-    const entry = GRATITUDE_VERSES[index];
+    const entry = versesList[index];
     if (!entry) return;
     const localized = entry[currentLang] || entry.zh;
     verseTextEl.textContent = localized.text;
@@ -300,13 +338,13 @@
   }
 
   btnNextVerse.addEventListener("click", () => {
-    if (!Array.isArray(GRATITUDE_VERSES) || GRATITUDE_VERSES.length <= 1) return;
-    currentVerseIndex = (currentVerseIndex + 1) % GRATITUDE_VERSES.length;
+    if (!Array.isArray(versesList) || versesList.length <= 1) return;
+    currentVerseIndex = (currentVerseIndex + 1) % versesList.length;
     renderVerse(currentVerseIndex);
   });
 
   btnCollectVerse.addEventListener("click", () => {
-    const entry = GRATITUDE_VERSES[currentVerseIndex];
+    const entry = versesList[currentVerseIndex];
     if (!entry) return;
     const localized = entry[currentLang] || entry.zh;
     const formatted =
@@ -505,6 +543,13 @@
     notes.unshift(newNote);
     saveNotes();
 
+    if (authToken) {
+      apiFetch("/api/notes", {
+        method: "POST",
+        body: JSON.stringify(newNote)
+      }).catch(() => {});
+    }
+
     if (activeFilter !== "全部" && activeFilter !== category) {
       setActiveFilter("全部");
     } else {
@@ -520,6 +565,9 @@
     setTimeout(() => {
       notes = notes.filter((item) => item.id !== id);
       saveNotes();
+      if (authToken) {
+        apiFetch(`/api/notes/${encodeURIComponent(id)}`, { method: "DELETE" }).catch(() => {});
+      }
       cardEl.remove();
       updateBoardStatus();
       showToast(t().toasts.removed);
@@ -693,6 +741,7 @@
     });
 
     footerTextEl.textContent = dict.footer;
+    updateAuthUI();
     renderNotes();
   }
 
@@ -1023,14 +1072,233 @@
     }
   }
 
+  /* ==================== 云端账号与数据库同步 ==================== */
+
+  const btnAuth = document.getElementById("btn-auth");
+  const authBtnLabel = document.getElementById("auth-btn-label");
+  const linkAdmin = document.getElementById("link-admin");
+  const adminLinkLabel = document.getElementById("admin-link-label");
+
+  const authModal = document.getElementById("auth-modal");
+  const btnCloseAuthModal = document.getElementById("btn-close-auth-modal");
+  const authFormView = document.getElementById("auth-form-view");
+  const authProfileView = document.getElementById("auth-profile-view");
+  const tabLogin = document.getElementById("tab-login");
+  const tabSignup = document.getElementById("tab-signup");
+  const authForm = document.getElementById("auth-form");
+  const authEmailInput = document.getElementById("auth-email");
+  const authNameWrap = document.getElementById("auth-name-wrap");
+  const authNameInput = document.getElementById("auth-name");
+  const authPasswordInput = document.getElementById("auth-password");
+  const authErrorEl = document.getElementById("auth-error");
+  const btnAuthSubmit = document.getElementById("btn-auth-submit");
+  const authProfileInfo = document.getElementById("auth-profile-info");
+  const btnSyncNotes = document.getElementById("btn-sync-notes");
+  const btnLogout = document.getElementById("btn-logout");
+
+  let authMode = "login";
+
+  async function apiFetch(path, options = {}) {
+    const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
+    if (authToken) {
+      headers.Authorization = `Bearer ${authToken}`;
+    }
+    const response = await fetch(path, { ...options, headers });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(data.error || "Request failed");
+    }
+    return data;
+  }
+
+  function updateAuthUI() {
+    const dict = t();
+    if (adminLinkLabel) adminLinkLabel.textContent = dict.adminLink;
+    if (currentUser) {
+      if (authBtnLabel) authBtnLabel.textContent = currentUser.displayName || currentUser.email;
+      if (linkAdmin) {
+        linkAdmin.classList.toggle("hidden", currentUser.role !== "admin");
+      }
+    } else {
+      if (authBtnLabel) authBtnLabel.textContent = dict.authBtnGuest;
+      if (linkAdmin) linkAdmin.classList.add("hidden");
+    }
+  }
+
+  function setAuthMode(mode) {
+    authMode = mode === "signup" ? "signup" : "login";
+    const dict = t();
+    tabLogin.classList.toggle("active", authMode === "login");
+    tabLogin.setAttribute("aria-selected", authMode === "login" ? "true" : "false");
+    tabSignup.classList.toggle("active", authMode === "signup");
+    tabSignup.setAttribute("aria-selected", authMode === "signup" ? "true" : "false");
+
+    authNameWrap.classList.toggle("hidden", authMode !== "signup");
+    authPasswordInput.setAttribute("autocomplete", authMode === "signup" ? "new-password" : "current-password");
+    btnAuthSubmit.textContent = authMode === "signup" ? dict.authSubmitSignup : dict.authSubmitLogin;
+    authErrorEl.classList.add("hidden");
+  }
+
+  function openAuthModal() {
+    const dict = t();
+    document.getElementById("auth-modal-title").textContent = dict.authModalTitle;
+    tabLogin.textContent = dict.authTabLogin;
+    tabSignup.textContent = dict.authTabSignup;
+    document.getElementById("lbl-auth-email").textContent = dict.authEmailLabel;
+    document.getElementById("lbl-auth-name").textContent = dict.authNameLabel;
+    document.getElementById("lbl-auth-password").textContent = dict.authPasswordLabel;
+    btnSyncNotes.textContent = dict.authSyncBtn;
+    btnLogout.textContent = dict.authLogoutBtn;
+
+    if (currentUser) {
+      authFormView.classList.add("hidden");
+      authProfileView.classList.remove("hidden");
+      authProfileInfo.textContent = dict.authProfileText(
+        currentUser.displayName || currentUser.email,
+        currentUser.email
+      );
+    } else {
+      authProfileView.classList.add("hidden");
+      authFormView.classList.remove("hidden");
+      setAuthMode(authMode);
+    }
+    authModal.classList.remove("hidden");
+  }
+
+  function closeAuthModal() {
+    authModal.classList.add("hidden");
+  }
+
+  async function syncAndLoadCloudNotes() {
+    if (!authToken) return;
+    try {
+      const localCustomNotes = notes.filter((n) => !String(n.id).startsWith("sample-"));
+      const data = await apiFetch("/api/notes/sync", {
+        method: "POST",
+        body: JSON.stringify({ notes: localCustomNotes })
+      });
+      if (Array.isArray(data.notes)) {
+        notes = data.notes;
+        saveNotes();
+        localStorage.setItem(STORAGE_INIT_KEY, "1");
+        renderNotes();
+      }
+      return data.inserted || 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  async function loadRemoteVerses() {
+    const isHttp = location.protocol === "http:" || location.protocol === "https:";
+    if (!isHttp) return;
+    try {
+      const data = await apiFetch("/api/verses");
+      if (Array.isArray(data.verses) && data.verses.length > 0) {
+        versesList = data.verses;
+        initDailyVerse();
+      }
+    } catch {
+      // 静态托管或离线时保持使用本地 verses.js
+    }
+  }
+
+  async function restoreSession() {
+    const isHttp = location.protocol === "http:" || location.protocol === "https:";
+    if (!isHttp || !authToken) return;
+    try {
+      const me = await apiFetch("/api/auth/me");
+      currentUser = me.user;
+      updateAuthUI();
+      const cloudData = await apiFetch("/api/notes");
+      if (Array.isArray(cloudData.notes)) {
+        notes = cloudData.notes;
+        saveNotes();
+        renderNotes();
+      }
+    } catch {
+      authToken = "";
+      currentUser = null;
+      localStorage.removeItem(STORAGE_TOKEN_KEY);
+      updateAuthUI();
+    }
+  }
+
+  if (btnAuth) btnAuth.addEventListener("click", openAuthModal);
+  if (btnCloseAuthModal) btnCloseAuthModal.addEventListener("click", closeAuthModal);
+  if (authModal) {
+    authModal.addEventListener("click", (event) => {
+      if (event.target === authModal) closeAuthModal();
+    });
+  }
+  if (tabLogin) tabLogin.addEventListener("click", () => setAuthMode("login"));
+  if (tabSignup) tabSignup.addEventListener("click", () => setAuthMode("signup"));
+
+  if (authForm) {
+    authForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      authErrorEl.classList.add("hidden");
+      btnAuthSubmit.disabled = true;
+
+      try {
+        const endpoint = authMode === "signup" ? "/api/auth/signup" : "/api/auth/login";
+        const payload = {
+          email: authEmailInput.value.trim(),
+          password: authPasswordInput.value,
+          displayName: authNameInput.value.trim()
+        };
+        const data = await apiFetch(endpoint, {
+          method: "POST",
+          body: JSON.stringify(payload)
+        });
+
+        authToken = data.token;
+        currentUser = data.user;
+        localStorage.setItem(STORAGE_TOKEN_KEY, authToken);
+        updateAuthUI();
+
+        await syncAndLoadCloudNotes();
+        closeAuthModal();
+        authPasswordInput.value = "";
+        showToast(authMode === "signup" ? t().toasts.signedUp : t().toasts.loggedIn);
+      } catch (err) {
+        authErrorEl.textContent = err.message;
+        authErrorEl.classList.remove("hidden");
+      } finally {
+        btnAuthSubmit.disabled = false;
+      }
+    });
+  }
+
+  if (btnSyncNotes) {
+    btnSyncNotes.addEventListener("click", async () => {
+      const inserted = await syncAndLoadCloudNotes();
+      showToast(t().toasts.syncedNotes(inserted));
+    });
+  }
+
+  if (btnLogout) {
+    btnLogout.addEventListener("click", () => {
+      authToken = "";
+      currentUser = null;
+      localStorage.removeItem(STORAGE_TOKEN_KEY);
+      updateAuthUI();
+      closeAuthModal();
+      showToast(t().toasts.loggedOut);
+    });
+  }
+
   function init() {
     initLanguage();
     initTheme();
     initDailyVerse();
     loadNotes();
     applyLanguage(currentLang);
+    updateAuthUI();
     checkStandaloneMode();
     registerServiceWorker();
+    loadRemoteVerses();
+    restoreSession();
   }
 
   init();

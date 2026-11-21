@@ -96,6 +96,7 @@ body {
   border: 1px solid var(--gold-200);
   border-radius: 999px;
   box-shadow: 0 4px 12px rgba(21, 38, 61, 0.06);
+  text-decoration: none;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -1187,4 +1188,72 @@ body {
 
 [data-theme="dark"] .modal-close-btn:hover {
   background: rgba(206, 216, 230, 0.12);
+}
+
+/* ==================== 账号登录 / 注册表单 ==================== */
+.hidden {
+  display: none !important;
+}
+
+.auth-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy-700);
+}
+
+.form-input {
+  width: 100%;
+  padding: 10px 14px;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--navy-900);
+  background: #fcfaf5;
+  border: 1px solid rgba(30, 58, 95, 0.16);
+  border-radius: 10px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-input:focus {
+  background: #fff;
+  border-color: var(--gold-500);
+  box-shadow: 0 0 0 3px rgba(200, 155, 60, 0.16);
+}
+
+.auth-error {
+  margin: 0;
+  font-size: 13px;
+  color: var(--danger-text);
+  background: var(--danger-bg);
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+[data-theme="dark"] .form-input {
+  color: var(--navy-900);
+  background: #151c28;
+  border-color: rgba(206, 216, 230, 0.2);
+}
+
+[data-theme="dark"] .form-input:focus {
+  background: #121824;
+  border-color: var(--gold-500);
 }
