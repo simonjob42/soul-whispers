@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#1e3a5f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="心语" />
+  <title>心语 · Soul-Whispers</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="icon" type="image/png" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
+  <script src="verses.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="ambient-glow" aria-hidden="true"></div>
+
+  <div class="page-wrapper">
+    <!-- 右上角工具栏 -->
+    <div class="top-utility-bar">
+      <button type="button" id="btn-install-app" class="theme-toggle-btn install-app-btn hidden" title="安装到手机桌面">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 3v12"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <path d="M5 21h14"></path>
+        </svg>
+        <span id="install-app-label">安装 App</span>
+      </button>
+      <button type="button" id="btn-lang-toggle" class="theme-toggle-btn" title="Switch Language / 切换中英文">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="2" y1="12" x2="22" y2="12"></line>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+        </svg>
+        <span id="lang-toggle-label">EN</span>
+      </button>
+      <button type="button" id="btn-theme-toggle" class="theme-toggle-btn" aria-pressed="false" title="切换夜间护眼模式">
+        <svg class="icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+        <svg class="icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <span id="theme-toggle-label">夜间模式</span>
+      </button>
+    </div>
+
+    <!-- 顶部标题区 -->
+    <header class="site-header">
+      <div class="header-badge">SOUL-WHISPERS · 心语</div>
+      <h1 class="site-title">心语</h1>
+      <p class="site-subtitle">
+        <span id="today-date"></span> · 在日常微光中记录恩典、思索与小确幸
+      </p>
+    </header>
+
+    <!-- 每日和合本圣经感恩经节区 -->
+    <section class="daily-verse-card" aria-label="每日圣经感恩经节">
+      <div class="verse-corner-ornament" aria-hidden="true"></div>
+      <div class="verse-header">
+        <span class="verse-tag">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+          今日和合本感恩经节
+        </span>
+        <div class="verse-actions">
+          <button type="button" id="btn-next-verse" class="btn-ghost" title="切换另一节经文">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+            </svg>
+            换一节
+          </button>
+          <button type="button" id="btn-collect-verse" class="btn-ghost" title="将今日经节贴到便签墙">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 5v14M5 12h14"></path>
+            </svg>
+            收入便签
+          </button>
+        </div>
+      </div>
+
+      <blockquote class="verse-body">
+        <span class="quote-mark" aria-hidden="true">“</span>
+        <p id="verse-text" class="verse-text"></p>
+      </blockquote>
+      <footer class="verse-footer">
+        <span class="gold-divider" aria-hidden="true"></span>
+        <cite id="verse-ref" class="verse-ref"></cite>
+      </footer>
+    </section>
+
+    <!-- 顶部便签输入与分类发布区 -->
+    <section class="composer-card" aria-label="写下新便签">
+      <div class="composer-top">
+        <span class="composer-label">选择便签分类</span>
+        <div class="category-pills" role="radiogroup" aria-label="便签分类">
+          <button type="button" class="pill active" data-category="感恩恩典" role="radio" aria-checked="true">
+            <span class="dot dot-grace"></span>感恩恩典
+          </button>
+          <button type="button" class="pill" data-category="读书金句" role="radio" aria-checked="false">
+            <span class="dot dot-quote"></span>读书金句
+          </button>
+          <button type="button" class="pill" data-category="生活小确幸" role="radio" aria-checked="false">
+            <span class="dot dot-joy"></span>生活小确幸
+          </button>
+        </div>
+      </div>
+
+      <div class="composer-input-wrap">
+        <textarea
+          id="note-input"
+          class="note-textarea"
+          rows="3"
+          maxlength="600"
+          placeholder="写下今天值得感恩的一件事、打动你的书摘，或一个温暖的瞬间……"
+        ></textarea>
+      </div>
+
+      <div class="composer-bottom">
+        <span class="composer-hint">提示：按 <kbd>Ctrl</kbd> / <kbd>⌘</kbd> + <kbd>Enter</kbd> 快速贴上便签</span>
+        <button type="button" id="btn-add-note" class="btn-primary">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 20h9"></path>
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+          </svg>
+          贴上便签
+        </button>
+      </div>
+    </section>
+
+    <!-- 便签墙展示区 -->
+    <main class="board-section">
+      <div class="board-header">
+        <div class="board-title-row">
+          <h2 class="board-title">灵感便签墙</h2>
+          <span id="notes-count" class="notes-count">0 张便签</span>
+        </div>
+        <div class="filter-bar" role="tablist" aria-label="按分类筛选便签">
+          <button type="button" class="filter-tab active" data-filter="全部" role="tab" aria-selected="true">全部</button>
+          <button type="button" class="filter-tab" data-filter="感恩恩典" role="tab" aria-selected="false">感恩恩典</button>
+          <button type="button" class="filter-tab" data-filter="读书金句" role="tab" aria-selected="false">读书金句</button>
+          <button type="button" class="filter-tab" data-filter="生活小确幸" role="tab" aria-selected="false">生活小确幸</button>
+        </div>
+      </div>
+
+      <div id="notes-grid" class="notes-masonry" aria-live="polite"></div>
+
+      <div id="empty-state" class="empty-state hidden">
+        <p id="empty-title" class="empty-title">便签墙暂时空着</p>
+        <p id="empty-desc" class="empty-desc">在上方写下第一句感恩或灵感，贴上属于今天的记忆吧。</p>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <p>所有便签仅保存在当前浏览器本地 · 愿你今日平安喜乐</p>
+    </footer>
+  </div>
+
+  <!-- 轻量提示条 -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- 导出图片专用的离屏渲染容器 -->
+  <div id="export-stage" class="export-stage" aria-hidden="true"></div>
+</body>
+</html>
