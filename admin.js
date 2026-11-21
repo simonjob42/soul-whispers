@@ -30,6 +30,10 @@
   const usersListEl = document.getElementById("admin-users-list");
   const toastEl = document.getElementById("toast");
 
+  const btnImportVerses = document.getElementById("btn-import-verses");
+  const inputImportVerses = document.getElementById("input-import-verses");
+  const btnDownloadTemplate = document.getElementById("btn-download-template");
+
   function showToast(msg) {
     toastEl.textContent = msg;
     toastEl.classList.add("show");
@@ -234,6 +238,114 @@
     btnLogout.classList.add("hidden");
     loginSection.classList.remove("hidden");
   });
+
+  /* ==================== 批量导入经节 (.json / .csv) ==================== */
+
+  function parseCsvLine(line) {
+    const cells = [];
+    let current = "";
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i += 1) {
+      const ch = line[i];
+      if (ch === '"') {
+        if (inQuotes && line[i + 1] === '"') {
+          current += '"';
+          i += 1;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (ch === "," && !inQuotes) {
+        cells.push(current.trim());
+        current = "";
+      } else {
+        current += ch;
+      }
+    }
+    cells.push(current.trim());
+    return cells;
+  }
+
+  function parseVersesFile(fileName, text) {
+    const trimmed = text.replace(/^\uFEFF/, "").trim();
+    if (!trimmed) return [];
+
+    if (fileName.toLowerCase().endsWith(".csv") || (!trimmed.startsWith("[") && !trimmed.startsWith("{"))) {
+      const lines = trimmed.split(/\r?\n/).filter((l) => l.trim().length > 0);
+      const parsed = [];
+      lines.forEach((line, idx) => {
+        const cols = parseCsvLine(line);
+        if (cols.length < 4) return;
+        const [zhT, zhR, enT, enR] = cols;
+        if (idx === 0 && (zhT === "zhText" || zhT === "中文经文")) return;
+        if (zhT && zhR && enT && enR) {
+          parsed.push({ zhText: zhT, zhRef: zhR, enText: enT, enRef: enR });
+        }
+      });
+      return parsed;
+    }
+
+    const json = JSON.parse(trimmed);
+    const list = Array.isArray(json) ? json : json && Array.isArray(json.verses) ? json.verses : [];
+    return list
+      .map((item) => ({
+        zhText: String(item.zhText || (item.zh && item.zh.text) || "").trim(),
+        zhRef: String(item.zhRef || (item.zh && item.zh.ref) || "").trim(),
+        enText: String(item.enText || (item.en && item.en.text) || "").trim(),
+        enRef: String(item.enRef || (item.en && item.en.ref) || "").trim()
+      }))
+      .filter((v) => v.zhText && v.zhRef && v.enText && v.enRef);
+  }
+
+  if (btnDownloadTemplate) {
+    btnDownloadTemplate.addEventListener("click", () => {
+      const template = [
+        {
+          zh: { text: "你们要称谢耶和华，因他本为善；他的慈爱永远长存！", ref: "诗篇 107:1" },
+          en: { text: "O give thanks unto the LORD, for he is good: for his mercy endureth for ever.", ref: "Psalm 107:1" }
+        },
+        {
+          zh: { text: "这是耶和华所定的日子，我们在其中要高兴欢喜！", ref: "诗篇 118:24" },
+          en: { text: "This is the day which the LORD hath made; we will rejoice and be glad in it.", ref: "Psalm 118:24" }
+        }
+      ];
+      const blob = new Blob([JSON.stringify(template, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "verses-template.json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      showToast("已下载导入模板 verses-template.json");
+    });
+  }
+
+  if (btnImportVerses && inputImportVerses) {
+    btnImportVerses.addEventListener("click", () => inputImportVerses.click());
+    inputImportVerses.addEventListener("change", async (event) => {
+      const file = event.target.files && event.target.files[0];
+      inputImportVerses.value = "";
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        const verses = parseVersesFile(file.name, text);
+        if (verses.length === 0) {
+          showToast("未在文件中识别到有效经节（需包含中英文经文与出处）");
+          return;
+        }
+        const result = await apiFetch("/api/admin/verses/bulk", {
+          method: "POST",
+          body: JSON.stringify({ verses })
+        });
+        showToast(`批量导入完成：新增 ${result.inserted} 条，跳过 ${result.skipped} 条`);
+        await loadDashboard();
+      } catch (err) {
+        showToast(err.message || "文件解析或导入失败");
+      }
+    });
+  }
 
   async function init() {
     applyTheme(localStorage.getItem(STORAGE_THEME_KEY) || "light");

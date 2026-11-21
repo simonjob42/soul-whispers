@@ -355,6 +355,59 @@ app.delete("/api/admin/verses/:id", requireAuth, requireAdmin, async (req, res) 
   }
 });
 
+app.post("/api/admin/verses/bulk", requireAuth, requireAdmin, async (req, res) => {
+  const rawList = Array.isArray(req.body.verses) ? req.body.verses : null;
+  if (!rawList || rawList.length === 0) {
+    return res.status(400).json({ error: "No verses provided" });
+  }
+  if (rawList.length > 500) {
+    return res.status(400).json({ error: "Maximum 500 verses per batch" });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const { rows: existingRows } = await client.query("SELECT zh_ref, zh_text FROM verses");
+    const existingKeys = new Set(existingRows.map((r) => `${r.zh_ref}::${r.zh_text}`));
+
+    let inserted = 0;
+    let skipped = 0;
+
+    for (const item of rawList) {
+      const zhText = String(item.zhText || (item.zh && item.zh.text) || "").trim();
+      const zhRef = String(item.zhRef || (item.zh && item.zh.ref) || "").trim();
+      const enText = String(item.enText || (item.en && item.en.text) || "").trim();
+      const enRef = String(item.enRef || (item.en && item.en.ref) || "").trim();
+
+      if (!zhText || !zhRef || !enText || !enRef) {
+        skipped += 1;
+        continue;
+      }
+
+      const dedupKey = `${zhRef}::${zhText}`;
+      if (existingKeys.has(dedupKey)) {
+        skipped += 1;
+        continue;
+      }
+      existingKeys.add(dedupKey);
+
+      await client.query(
+        "INSERT INTO verses (zh_text, zh_ref, en_text, en_ref) VALUES ($1, $2, $3, $4)",
+        [zhText, zhRef, enText, enRef]
+      );
+      inserted += 1;
+    }
+
+    await client.query("COMMIT");
+    return res.status(201).json({ inserted, skipped, total: rawList.length });
+  } catch {
+    await client.query("ROLLBACK");
+    return res.status(500).json({ error: "Failed to bulk import verses" });
+  } finally {
+    client.release();
+  }
+});
+
 /* ==================== 启动服务 ==================== */
 
 initDatabase()
