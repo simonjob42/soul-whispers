@@ -1,6 +1,6 @@
 {
-  "name": "心语 · Soul-Whispers",
-  "short_name": "心语",
+  "name": "心语卡片 · Soul-Whispers",
+  "short_name": "心语卡片",
   "description": "每日感恩与灵感便签墙 · Daily Gratitude & Inspiration",
   "start_url": "./index.html",
   "scope": "./",

@@ -8,23 +8,23 @@
   const I18N = {
     zh: {
       htmlLang: "zh-CN",
-      pageTitle: "心语 · Soul-Whispers",
-      siteTitle: "心语",
+      pageTitle: "心语卡片 · Soul-Whispers",
+      siteTitle: "心语卡片",
       subtitleSuffix: "在日常微光中记录恩典、思索与小确幸",
       installApp: "安装 App",
       iosInstall: "iPhone 下载",
       androidInstall: "Android 下载",
-      iosModalTitle: "在 iPhone / iPad 上安装「心语」",
+      iosModalTitle: "在 iPhone / iPad 上安装「心语卡片」",
       iosModalSteps: [
         "用 iPhone 自带的 Safari 浏览器打开当前网页。",
         "点击浏览器底部（或右上角）的「分享」按钮（方框带向上箭头）。",
-        "向下滑动选择「添加到主屏幕」，确认名称为「心语」后点击「添加」。"
+        "向下滑动选择「添加到主屏幕」，确认名称为「心语卡片」后点击「添加」。"
       ],
-      androidModalTitle: "在 Android 手机上安装「心语」",
+      androidModalTitle: "在 Android 手机上安装「心语卡片」",
       androidModalSteps: [
         "用 Android 手机上的 Chrome 或 Edge 浏览器打开当前网页。",
         "点击浏览器右上角菜单（⋮），选择「安装应用」或「添加到主屏幕」。",
-        "确认安装后，桌面即会出现「心语」图标，支持离线打开。"
+        "确认安装后，桌面即会出现「心语卡片」图标，支持离线打开。"
       ],
       copyUrlBtn: "复制当前网址",
       modalOkBtn: "我知道了",
@@ -74,7 +74,7 @@
       emptyFilterTitle: (cat) => `「${cat}」分类下暂无便签`,
       emptyFilterDesc: "试着切换到其他分类，或写下一条新的记录吧。",
       footer: "所有便签仅保存在当前浏览器本地 · 愿你今日平安喜乐",
-      exportBrand: "心语 · 每日感恩与灵感",
+      exportBrand: "心语卡片 · 每日感恩与灵感",
       exportFilePrefix: "心语便签",
       toasts: {
         collected: "已将今日经节收入便签墙",
@@ -102,7 +102,7 @@
     },
     en: {
       htmlLang: "en",
-      pageTitle: "Soul-Whispers · 心语",
+      pageTitle: "Soul-Whispers · 心语卡片",
       siteTitle: "Soul-Whispers",
       subtitleSuffix: "Capture grace, reflections, and quiet joys in everyday light",
       installApp: "Install App",
