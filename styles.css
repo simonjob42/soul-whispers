@@ -342,10 +342,43 @@ body {
   color: var(--navy-700);
 }
 
+.composer-categories-wrap {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .category-pills {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+.pill-add {
+  border-style: dashed;
+  border-color: var(--gold-400);
+  color: var(--gold-600);
+  background: transparent;
+}
+
+.pill-add:hover {
+  background: var(--gold-100);
+  border-style: solid;
+}
+
+.add-category-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.add-category-row .form-input {
+  max-width: 240px;
+  padding: 7px 12px;
+  font-size: 13px;
 }
 
 .pill {

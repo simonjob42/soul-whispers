@@ -4,6 +4,7 @@
   const STORAGE_THEME_KEY = "gratitude_board_theme_v1";
   const STORAGE_LANG_KEY = "gratitude_board_lang_v1";
   const STORAGE_TOKEN_KEY = "soul_whispers_token_v1";
+  const STORAGE_CATEGORIES_KEY = "gratitude_board_custom_categories_v1";
 
   const I18N = {
     zh: {
@@ -54,7 +55,10 @@
       hintPrefix: "提示：按",
       hintSuffix: "快速贴上便签",
       addNoteBtn: "贴上便签",
-      quickAddBtn: "添加便签",
+      addCategoryBtn: "+ 添加分类",
+      newCategoryPlaceholder: "输入新分类名称，如：每日祷告",
+      confirmCategoryBtn: "添加",
+      cancelCategoryBtn: "取消",
       boardTitle: "灵感便签墙",
       filterAll: "全部",
       categories: {
@@ -151,7 +155,10 @@
       hintPrefix: "Tip: Press",
       hintSuffix: "to post quickly",
       addNoteBtn: "Post Note",
-      quickAddBtn: "Add Note",
+      addCategoryBtn: "+ Add Category",
+      newCategoryPlaceholder: "New category name, e.g. Prayers",
+      confirmCategoryBtn: "Add",
+      cancelCategoryBtn: "Cancel",
       boardTitle: "Inspiration Wall",
       filterAll: "All",
       categories: {
@@ -259,6 +266,7 @@
   let activeFilter = "全部";
   let currentVerseIndex = 0;
   let versesList = Array.isArray(GRATITUDE_VERSES) ? GRATITUDE_VERSES.slice() : [];
+  let customCategories = [];
   let notes = [];
   let currentUser = null;
   let authToken = localStorage.getItem(STORAGE_TOKEN_KEY) || "";
@@ -417,6 +425,9 @@
     const themeSet = new Set(["感恩恩典", "平安喜乐", "信心盼望", "读书金句", "生活小确幸"]);
     versesList.forEach((v) => {
       if (v.theme) themeSet.add(v.theme);
+    });
+    customCategories.forEach((c) => {
+      if (c) themeSet.add(c);
     });
     notes.forEach((n) => {
       if (n.category) themeSet.add(n.category);
@@ -851,8 +862,14 @@
       ` ${dict.hintSuffix}`
     );
 
-    const quickAddLabel = document.getElementById("quick-add-label");
-    if (quickAddLabel) quickAddLabel.textContent = dict.quickAddBtn;
+    const addCatBtn = document.getElementById("btn-add-category");
+    if (addCatBtn) addCatBtn.textContent = dict.addCategoryBtn;
+    const newCatInput = document.getElementById("input-new-category");
+    if (newCatInput) newCatInput.placeholder = dict.newCategoryPlaceholder;
+    const confirmCatBtn = document.getElementById("btn-confirm-category");
+    if (confirmCatBtn) confirmCatBtn.textContent = dict.confirmCategoryBtn;
+    const cancelCatBtn = document.getElementById("btn-cancel-category");
+    if (cancelCatBtn) cancelCatBtn.textContent = dict.cancelCategoryBtn;
     renderCategoryAndFilterBars();
 
     boardTitleEl.textContent = dict.boardTitle;
@@ -906,18 +923,69 @@
     });
   });
 
-  const btnQuickAddNote = document.getElementById("btn-quick-add-note");
-  if (btnQuickAddNote) {
-    btnQuickAddNote.addEventListener("click", () => {
-      if (activeFilter !== "全部") {
-        selectedCategory = activeFilter;
-        renderCategoryAndFilterBars();
+  const btnAddCategory = document.getElementById("btn-add-category");
+  const addCategoryRow = document.getElementById("add-category-row");
+  const inputNewCategory = document.getElementById("input-new-category");
+  const btnConfirmCategory = document.getElementById("btn-confirm-category");
+  const btnCancelCategory = document.getElementById("btn-cancel-category");
+
+  function loadCustomCategories() {
+    try {
+      const raw = localStorage.getItem(STORAGE_CATEGORIES_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      customCategories = Array.isArray(parsed) ? parsed.filter((c) => typeof c === "string" && c.trim()) : [];
+    } catch {
+      customCategories = [];
+    }
+  }
+
+  function saveCustomCategories() {
+    localStorage.setItem(STORAGE_CATEGORIES_KEY, JSON.stringify(customCategories));
+  }
+
+  function confirmNewCategory() {
+    const name = (inputNewCategory ? inputNewCategory.value : "").trim().slice(0, 24);
+    if (!name) return;
+    if (!customCategories.includes(name)) {
+      customCategories.push(name);
+      saveCustomCategories();
+    }
+    selectedCategory = name;
+    renderCategoryAndFilterBars();
+    if (inputNewCategory) inputNewCategory.value = "";
+    if (addCategoryRow) addCategoryRow.classList.add("hidden");
+  }
+
+  if (btnAddCategory && addCategoryRow) {
+    btnAddCategory.addEventListener("click", () => {
+      const willShow = addCategoryRow.classList.contains("hidden");
+      addCategoryRow.classList.toggle("hidden", !willShow);
+      if (willShow && inputNewCategory) {
+        inputNewCategory.focus();
       }
-      const composer = document.querySelector(".composer-card");
-      if (composer) {
-        composer.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  }
+
+  if (btnConfirmCategory) {
+    btnConfirmCategory.addEventListener("click", confirmNewCategory);
+  }
+
+  if (btnCancelCategory && addCategoryRow) {
+    btnCancelCategory.addEventListener("click", () => {
+      if (inputNewCategory) inputNewCategory.value = "";
+      addCategoryRow.classList.add("hidden");
+    });
+  }
+
+  if (inputNewCategory) {
+    inputNewCategory.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        confirmNewCategory();
+      } else if (event.key === "Escape" && addCategoryRow) {
+        inputNewCategory.value = "";
+        addCategoryRow.classList.add("hidden");
       }
-      setTimeout(() => noteInput.focus(), 260);
     });
   }
 
@@ -1429,6 +1497,7 @@
     initLanguage();
     initTheme();
     initDailyVerse();
+    loadCustomCategories();
     loadNotes();
     applyLanguage(currentLang);
     updateAuthUI();

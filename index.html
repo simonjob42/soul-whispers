@@ -140,17 +140,26 @@
     <section class="composer-card" aria-label="写下新便签">
       <div class="composer-top">
         <span class="composer-label">选择便签分类</span>
-        <div class="category-pills" role="radiogroup" aria-label="便签分类">
-          <button type="button" class="pill active" data-category="感恩恩典" role="radio" aria-checked="true">
-            <span class="dot dot-grace"></span>感恩恩典
-          </button>
-          <button type="button" class="pill" data-category="读书金句" role="radio" aria-checked="false">
-            <span class="dot dot-quote"></span>读书金句
-          </button>
-          <button type="button" class="pill" data-category="生活小确幸" role="radio" aria-checked="false">
-            <span class="dot dot-joy"></span>生活小确幸
-          </button>
+        <div class="composer-categories-wrap">
+          <div class="category-pills" role="radiogroup" aria-label="便签分类">
+            <button type="button" class="pill active" data-category="感恩恩典" role="radio" aria-checked="true">
+              <span class="dot dot-grace"></span>感恩恩典
+            </button>
+            <button type="button" class="pill" data-category="读书金句" role="radio" aria-checked="false">
+              <span class="dot dot-quote"></span>读书金句
+            </button>
+            <button type="button" class="pill" data-category="生活小确幸" role="radio" aria-checked="false">
+              <span class="dot dot-joy"></span>生活小确幸
+            </button>
+          </div>
+          <button type="button" id="btn-add-category" class="pill pill-add" title="添加新的便签分类">+ 添加分类</button>
         </div>
+      </div>
+
+      <div id="add-category-row" class="add-category-row hidden">
+        <input type="text" id="input-new-category" class="form-input" maxlength="24" placeholder="输入新分类名称，如：每日祷告" />
+        <button type="button" id="btn-confirm-category" class="btn-primary btn-quick-add">添加</button>
+        <button type="button" id="btn-cancel-category" class="btn-ghost">取消</button>
       </div>
 
       <div class="composer-input-wrap">
@@ -182,12 +191,6 @@
           <h2 class="board-title">灵感便签墙</h2>
           <div class="board-meta-actions">
             <span id="notes-count" class="notes-count">0 张便签</span>
-            <button type="button" id="btn-quick-add-note" class="btn-primary btn-quick-add" title="快速添加一条便签">
-              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M12 5v14M5 12h14"></path>
-              </svg>
-              <span id="quick-add-label">添加便签</span>
-            </button>
             <button type="button" id="btn-export-backup" class="btn-ghost btn-backup" title="导出全部便签为 JSON 备份">
               <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
