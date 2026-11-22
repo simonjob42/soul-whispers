@@ -219,8 +219,8 @@
 
   const DEFAULT_NOTES = [
     { id: "sample-1", category: "感恩恩典", content: SAMPLE_TRANSLATIONS["sample-1"].zh, date: "示例便签" },
-    { id: "sample-2", category: "信心盼望", content: SAMPLE_TRANSLATIONS["sample-2"].zh, date: "示例便签" },
-    { id: "sample-3", category: "平安喜乐", content: SAMPLE_TRANSLATIONS["sample-3"].zh, date: "示例便签" }
+    { id: "sample-2", category: "读书金句", content: SAMPLE_TRANSLATIONS["sample-2"].zh, date: "示例便签" },
+    { id: "sample-3", category: "生活小确幸", content: SAMPLE_TRANSLATIONS["sample-3"].zh, date: "示例便签" }
   ];
 
   // DOM 元素
@@ -414,18 +414,13 @@
   const filterBarContainer = document.querySelector(".filter-bar");
 
   function getUnifiedThemes() {
-    const themeSet = new Set();
+    const themeSet = new Set(["感恩恩典", "平安喜乐", "信心盼望", "读书金句", "生活小确幸"]);
     versesList.forEach((v) => {
       if (v.theme) themeSet.add(v.theme);
     });
     notes.forEach((n) => {
       if (n.category) themeSet.add(n.category);
     });
-    if (themeSet.size === 0) {
-      themeSet.add("感恩恩典");
-      themeSet.add("平安喜乐");
-      themeSet.add("信心盼望");
-    }
     return Array.from(themeSet);
   }
 
