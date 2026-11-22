@@ -1057,7 +1057,7 @@
     if (location.protocol === "http:" || location.protocol === "https:") {
       return window.location.href;
     }
-    return "https://simonjob42.github.io/soul-whispers/";
+    return "https://soul-whispers.onrender.com/";
   }
 
   function renderInstallQrCode() {
